@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { searchNovels, getCoverUrl } from '@/services/api'
 import { Loader2, Search as SearchIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 export default function Search() {
   const [searchParams] = useSearchParams()
@@ -73,10 +74,13 @@ export default function Search() {
           <div className="flex flex-col items-center justify-center py-32 text-center border border-zinc-800 border-dashed rounded-2xl bg-zinc-900/20">
             <SearchIcon className="w-12 h-12 text-zinc-600 mb-4" />
             <h2 className="text-xl font-bold mb-2">Nenhum resultado encontrado</h2>
-            <p className="text-zinc-500 max-w-md">
-              Não encontramos nenhuma obra com esse título ou gênero. Tente usar outras
-              palavras-chave.
+            <p className="text-zinc-500 max-w-md mb-6">
+              Não encontramos nenhuma obra com esse título ou gênero. Que tal explorar novas
+              histórias?
             </p>
+            <Button asChild className="bg-lime-400 text-black hover:bg-lime-500 font-bold">
+              <Link to="/explore">Explorar Obras</Link>
+            </Button>
           </div>
         )}
       </div>

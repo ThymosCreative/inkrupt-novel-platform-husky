@@ -61,7 +61,13 @@ export default function Profile() {
       <div className="container mx-auto px-4 relative z-20">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-12 -mt-12 md:ml-6">
           <Avatar className="w-32 h-32 border-4 border-lime-400 bg-zinc-800 shadow-xl">
-            <AvatarImage src={`https://img.usecurling.com/ppl/thumbnail?seed=${user?.id}`} />
+            <AvatarImage
+              src={
+                user?.avatar
+                  ? pb.files.getURL(user, user.avatar)
+                  : `https://img.usecurling.com/ppl/thumbnail?seed=${user?.id}`
+              }
+            />
             <AvatarFallback>{user?.name?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-1 text-center md:text-left mt-4 md:mt-0">
@@ -79,6 +85,7 @@ export default function Profile() {
             <Button
               variant="outline"
               className="border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 rounded-xl"
+              onClick={() => navigate('/settings')}
             >
               <Settings className="w-4 h-4 mr-2" />
               Configurações

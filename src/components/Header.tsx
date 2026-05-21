@@ -1,18 +1,31 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Search, Bell, X, Loader2 } from 'lucide-react'
+import { Search, Bell, X, Loader2, User, Settings as SettingsIcon, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { AuthModal } from './AuthModal'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { searchNovels, getCoverUrl } from '@/services/api'
+import pb from '@/lib/pocketbase/client'
 
 export function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, signOut } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+
+  const handleSignOut = () => {
+    signOut()
+    navigate('/')
+  }
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -180,18 +193,76 @@ export function Header() {
                     3
                   </span>
                 </Button>
-                <Link to="/profile">
-                  <Avatar className="w-9 h-9 border-2 border-lime-400 transition-colors cursor-pointer bg-zinc-800">
-                    <AvatarImage
-                      src={`https://img.usecurling.com/ppl/thumbnail?seed=${user?.id}`}
-                    />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0).toUpperCase() ||
-                        user?.email?.charAt(0).toUpperCase() ||
-                        'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Avatar className="w-9 h-9 border-2 border-lime-400 transition-colors cursor-pointer bg-zinc-800 hover:opacity-80">
+                      <AvatarImage
+                        src={
+                          user?.avatar
+                            ? pb.files.getURL(user, user.avatar)
+                            : `https://img.usecurling.com/ppl/thumbnail?seed=${user?.id}`
+                        }
+                      />
+                      <AvatarFallback>
+                        {user?.name?.charAt(0).toUpperCase() ||
+                          user?.email?.charAt(0).toUpperCase() ||
+                          'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-56 bg-zinc-900 border-zinc-800 text-white rounded-xl shadow-xl"
+                  >
+                    <div className="flex items-center gap-2 p-3">
+                      <Avatar className="w-8 h-8 bg-zinc-800 border border-zinc-700">
+                        <AvatarImage
+                          src={
+                            user?.avatar
+                              ? pb.files.getURL(user, user.avatar)
+                              : `https://img.usecurling.com/ppl/thumbnail?seed=${user?.id}`
+                          }
+                        />
+                        <AvatarFallback>
+                          {user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-0.5 leading-none min-w-0">
+                        <p className="font-medium text-sm text-zinc-100 truncate">
+                          {user?.name || 'Usuário'}
+                        </p>
+                        <p className="text-xs text-zinc-400 truncate">{user?.email}</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuItem
+                      asChild
+                      className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 rounded-md m-1"
+                    >
+                      <Link to="/profile" className="flex items-center w-full text-zinc-300">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Meu Perfil</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      asChild
+                      className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 rounded-md m-1"
+                    >
+                      <Link to="/settings" className="flex items-center w-full text-zinc-300">
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="cursor-pointer text-red-400 hover:bg-red-400/10 focus:bg-red-400/10 focus:text-red-400 rounded-md m-1"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-3">

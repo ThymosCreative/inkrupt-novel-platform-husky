@@ -9,6 +9,7 @@ import Novel from './pages/Novel'
 import Reader from './pages/Reader'
 import Profile from './pages/Profile'
 import Author from './pages/Author'
+import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import { AuthProvider, useAuth } from './hooks/use-auth'
@@ -46,6 +47,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Author />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
