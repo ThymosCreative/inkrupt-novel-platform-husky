@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Search, Bell, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,6 +12,7 @@ export function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const { user, isAuthenticated } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -87,7 +88,17 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <div className="relative hidden sm:block" ref={searchRef}>
-              <div className="flex items-center bg-zinc-900 rounded-full px-3 py-1.5 border border-zinc-800 focus-within:border-lime-400 focus-within:ring-1 focus-within:ring-lime-400 transition-all">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (searchQuery.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                    setSearchQuery('')
+                    searchRef.current?.blur()
+                  }
+                }}
+                className="flex items-center bg-zinc-900 rounded-full px-3 py-1.5 border border-zinc-800 focus-within:border-lime-400 focus-within:ring-1 focus-within:ring-lime-400 transition-all"
+              >
                 <Search className="w-4 h-4 text-zinc-400" />
                 <input
                   type="text"
@@ -98,13 +109,14 @@ export function Header() {
                 />
                 {searchQuery && (
                   <button
+                    type="button"
                     onClick={() => setSearchQuery('')}
                     className="text-zinc-400 hover:text-white"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
-              </div>
+              </form>
 
               {searchQuery && (
                 <div className="absolute top-full right-0 mt-2 w-[300px] lg:w-full bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[400px]">

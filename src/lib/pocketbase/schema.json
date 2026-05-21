@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-21T22:25:30.007Z",
+  "generatedAt": "2026-05-21T22:38:24.104Z",
   "collections": [
     {
       "name": "users",
@@ -136,7 +136,8 @@
       "indexes": [
         "CREATE INDEX idx_novels_rating ON novels (rating DESC)",
         "CREATE INDEX idx_novels_reads ON novels (reads DESC)",
-        "CREATE INDEX idx_novels_created ON novels (created DESC)"
+        "CREATE INDEX idx_novels_created ON novels (created DESC)",
+        "CREATE INDEX `idx_novels_title` ON `novels` (title)"
       ]
     },
     {
@@ -307,6 +308,54 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "comments",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "chapter",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "chapters"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_comments_chapter ON comments (chapter, created DESC)"]
     }
   ]
 }

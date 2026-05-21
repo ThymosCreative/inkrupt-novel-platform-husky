@@ -285,6 +285,10 @@ export default function Reader() {
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
+
+      <div className="container mx-auto px-4 max-w-3xl pb-10">
+        <ChapterComments chapterId={chapter.id} theme={settings.theme} />
+      </div>
     </div>
   )
 }

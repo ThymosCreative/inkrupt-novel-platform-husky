@@ -31,11 +31,21 @@ export const getTrendingNovels = async () => {
   })
 }
 
-export const searchNovels = async (query: string) => {
-  return pb.collection('novels').getList(1, 5, {
-    filter: `title ~ "${query}" || description ~ "${query}"`,
+export const searchNovels = async (query: string, limit: number = 5) => {
+  return pb.collection('novels').getList(1, limit, {
+    filter: `title ~ "${query}" || genres ~ "${query}"`,
     expand: 'author',
   })
+}
+
+export const getComments = async (chapterId: string) => {
+  return pb
+    .collection('comments')
+    .getFullList({ filter: `chapter = "${chapterId}"`, expand: 'user', sort: '-created' })
+}
+
+export const createComment = async (chapterId: string, content: string, userId: string) => {
+  return pb.collection('comments').create({ chapter: chapterId, content, user: userId })
 }
 
 export const getNovel = async (id: string) => {
