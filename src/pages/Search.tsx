@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Loader2, Search as SearchIcon, Filter } from 'lucide-react'
+import { Loader2, Search as SearchIcon, Filter, Sparkles } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 const GENRES = [
@@ -252,7 +253,14 @@ export default function Search() {
           ) : results.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 animate-in fade-in">
               {results.map((novel) => (
-                <NovelCard key={novel.id} novel={novel} />
+                <div key={novel.id} className="relative">
+                  <NovelCard novel={novel} />
+                  {novel._matchType === 'semantic' && (
+                    <Badge className="absolute top-2 right-2 bg-purple-500 hover:bg-purple-500 text-white border-none shadow-md pointer-events-none z-10 flex items-center gap-1 font-bold text-xs">
+                      <Sparkles className="w-3 h-3" /> IA Recomenda
+                    </Badge>
+                  )}
+                </div>
               ))}
             </div>
           ) : (

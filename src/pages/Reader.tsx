@@ -13,14 +13,19 @@ import {
   ChevronRight,
   ArrowLeft,
   Loader2,
+  Coins,
+  Lock,
+  Zap,
+  Minus,
+  Plus,
+  AlignJustify,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChapterComments } from '@/components/ChapterComments'
-import { Coins, Lock, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/hooks/use-wallet'
-import { getChapterCost } from '@/lib/utils'
+import { getChapterCost } from '@/services/api'
 import { Badge } from '@/components/ui/badge'
 
 export default function Reader() {
@@ -38,19 +43,20 @@ export default function Reader() {
 
   const [progress, setProgress] = useState(0)
   const [settings, setSettings] = useState({
-    theme: user?.preferences?.theme || 'dark', // 'dark' | 'sepia' | 'light'
-    fontSize: user?.preferences?.fontSize || 'M', // 'S' | 'M' | 'L' | 'XL'
-    spacing: user?.preferences?.spacing || 'normal', // 'normal' | 'amplo'
+    theme: user?.preferences?.theme || 'dark',
+    fontFamily: user?.preferences?.fontFamily || 'sans',
+    fontSize: user?.preferences?.fontSize || 18,
+    lineHeight: user?.preferences?.lineHeight || 'normal',
+    margins: user?.preferences?.margins || 'standard',
   })
 
-  // Keep settings synced if loaded later
   useEffect(() => {
     if (user?.preferences) {
       setSettings((s) => ({ ...s, ...user.preferences }))
     }
   }, [user?.preferences])
 
-  const updateSetting = (key: string, value: string) => {
+  const updateSetting = (key: string, value: string | number) => {
     const newSettings = { ...settings, [key]: value }
     setSettings(newSettings)
     if (user) {
@@ -58,8 +64,12 @@ export default function Reader() {
     }
   }
 
-  const fontSizeMap: Record<string, number> = { S: 14, M: 18, L: 22, XL: 26 }
-  const spacingMap: Record<string, number> = { normal: 1.6, amplo: 2.2 }
+  const lineHeightMap: Record<string, number> = { compact: 1.4, normal: 1.6, wide: 2.0 }
+  const marginClasses: Record<string, string> = {
+    narrow: 'max-w-xl',
+    standard: 'max-w-3xl',
+    wide: 'max-w-5xl',
+  }
 
   useEffect(() => {
     if (id && num) {
@@ -152,13 +162,15 @@ export default function Reader() {
   }
 
   const themeClasses = {
-    dark: 'bg-slate-950 text-slate-300',
+    dark: 'bg-black text-slate-300',
+    slate: 'bg-slate-900 text-slate-300',
     sepia: 'bg-[#f4ecd8] text-[#5b4636]',
     light: 'bg-white text-zinc-900',
   }
 
   const headerThemeClasses = {
-    dark: 'bg-slate-950/90 border-slate-900',
+    dark: 'bg-black/90 border-slate-900',
+    slate: 'bg-slate-900/90 border-slate-800',
     sepia: 'bg-[#f4ecd8]/90 border-[#e6dcc0]',
     light: 'bg-white/90 border-zinc-200',
   }
@@ -167,7 +179,7 @@ export default function Reader() {
     <div
       className={cn(
         'min-h-screen transition-colors duration-500 pb-32',
-        themeClasses[settings.theme as keyof typeof themeClasses],
+        themeClasses[settings.theme as keyof typeof themeClasses] || themeClasses.dark,
       )}
     >
       <div className="fixed top-0 left-0 w-full h-0.5 bg-black/10 z-50">
@@ -180,7 +192,8 @@ export default function Reader() {
       <header
         className={cn(
           'sticky top-0 z-40 w-full backdrop-blur-md border-b transition-colors',
-          headerThemeClasses[settings.theme as keyof typeof headerThemeClasses],
+          headerThemeClasses[settings.theme as keyof typeof headerThemeClasses] ||
+            headerThemeClasses.dark,
         )}
       >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-4xl">
@@ -205,78 +218,183 @@ export default function Reader() {
           </PopoverTrigger>
           <PopoverContent
             side="left"
-            className="w-72 bg-zinc-950 border-zinc-800 p-6 rounded-2xl mr-4 shadow-2xl"
+            className="w-80 bg-zinc-950 border-zinc-800 p-6 rounded-2xl mr-4 shadow-2xl"
           >
             <div className="space-y-6">
               <div>
                 <h4 className="text-sm font-medium text-zinc-400 mb-3">Tema</h4>
-                <div className="flex gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   <button
-                    onClick={() => updateSetting('theme', 'dark')}
+                    onClick={() => updateSetting('theme', 'light')}
                     className={cn(
-                      'flex-1 h-10 rounded-lg bg-slate-950 border-2',
-                      settings.theme === 'dark' ? 'border-lime-400' : 'border-zinc-800',
+                      'h-10 rounded-lg bg-white border-2',
+                      settings.theme === 'light' ? 'border-lime-400' : 'border-zinc-800',
                     )}
+                    title="Light"
                   />
                   <button
                     onClick={() => updateSetting('theme', 'sepia')}
                     className={cn(
-                      'flex-1 h-10 rounded-lg bg-[#f4ecd8] border-2',
+                      'h-10 rounded-lg bg-[#f4ecd8] border-2',
                       settings.theme === 'sepia' ? 'border-lime-400' : 'border-zinc-800',
                     )}
+                    title="Sepia"
                   />
                   <button
-                    onClick={() => updateSetting('theme', 'light')}
+                    onClick={() => updateSetting('theme', 'slate')}
                     className={cn(
-                      'flex-1 h-10 rounded-lg bg-white border-2',
-                      settings.theme === 'light' ? 'border-lime-400' : 'border-zinc-800',
+                      'h-10 rounded-lg bg-slate-900 border-2',
+                      settings.theme === 'slate' ? 'border-lime-400' : 'border-zinc-800',
                     )}
+                    title="Slate"
+                  />
+                  <button
+                    onClick={() => updateSetting('theme', 'dark')}
+                    className={cn(
+                      'h-10 rounded-lg bg-black border-2',
+                      settings.theme === 'dark' ? 'border-lime-400' : 'border-zinc-800',
+                    )}
+                    title="Dark"
                   />
                 </div>
               </div>
+
               <div>
-                <h4 className="text-sm font-medium text-zinc-400 mb-3">Tamanho da Fonte</h4>
+                <h4 className="text-sm font-medium text-zinc-400 mb-3">Fonte</h4>
                 <div className="flex gap-2">
-                  {['S', 'M', 'L', 'XL'].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => updateSetting('fontSize', s)}
-                      className={cn(
-                        'flex-1 h-10 rounded-lg border font-medium transition-colors',
-                        settings.fontSize === s
-                          ? 'border-lime-400 bg-lime-400/10 text-lime-400'
-                          : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
-                      )}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => updateSetting('fontFamily', 'sans')}
+                    className={cn(
+                      'flex-1 h-10 rounded-lg border font-sans',
+                      settings.fontFamily === 'sans'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
+                        : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
+                    )}
+                  >
+                    Inter
+                  </button>
+                  <button
+                    onClick={() => updateSetting('fontFamily', 'serif')}
+                    className={cn(
+                      'flex-1 h-10 rounded-lg border font-serif',
+                      settings.fontFamily === 'serif'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
+                        : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
+                    )}
+                  >
+                    Georgia
+                  </button>
                 </div>
               </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-zinc-400 mb-3 flex justify-between">
+                  Tamanho <span>{settings.fontSize}px</span>
+                </h4>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => updateSetting('fontSize', Math.max(14, settings.fontSize - 1))}
+                    className="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="range"
+                    min={14}
+                    max={28}
+                    value={settings.fontSize}
+                    onChange={(e) => updateSetting('fontSize', Number(e.target.value))}
+                    className="flex-1 accent-lime-400"
+                  />
+                  <button
+                    onClick={() => updateSetting('fontSize', Math.min(28, settings.fontSize + 1))}
+                    className="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <h4 className="text-sm font-medium text-zinc-400 mb-3">Espaçamento</h4>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => updateSetting('spacing', 'normal')}
+                    onClick={() => updateSetting('lineHeight', 'compact')}
                     className={cn(
-                      'flex-1 h-10 rounded-lg border font-medium transition-colors',
-                      settings.spacing === 'normal'
-                        ? 'border-lime-400 bg-lime-400/10 text-lime-400'
+                      'flex-1 py-2 rounded-lg border text-sm flex flex-col items-center gap-1',
+                      settings.lineHeight === 'compact'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
                         : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
                     )}
                   >
+                    <AlignJustify className="w-4 h-4 opacity-70" />
+                    Compacto
+                  </button>
+                  <button
+                    onClick={() => updateSetting('lineHeight', 'normal')}
+                    className={cn(
+                      'flex-1 py-2 rounded-lg border text-sm flex flex-col items-center gap-1',
+                      settings.lineHeight === 'normal'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
+                        : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
+                    )}
+                  >
+                    <AlignJustify className="w-4 h-4" />
                     Normal
                   </button>
                   <button
-                    onClick={() => updateSetting('spacing', 'amplo')}
+                    onClick={() => updateSetting('lineHeight', 'wide')}
                     className={cn(
-                      'flex-1 h-10 rounded-lg border font-medium transition-colors',
-                      settings.spacing === 'amplo'
-                        ? 'border-lime-400 bg-lime-400/10 text-lime-400'
+                      'flex-1 py-2 rounded-lg border text-sm flex flex-col items-center gap-1',
+                      settings.lineHeight === 'wide'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
                         : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
                     )}
                   >
+                    <AlignJustify
+                      className="w-4 h-4 opacity-70"
+                      style={{ transform: 'scaleY(1.2)' }}
+                    />
                     Amplo
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-zinc-400 mb-3">Margens</h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateSetting('margins', 'narrow')}
+                    className={cn(
+                      'flex-1 py-2 rounded-lg border text-sm',
+                      settings.margins === 'narrow'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
+                        : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
+                    )}
+                  >
+                    Estreita
+                  </button>
+                  <button
+                    onClick={() => updateSetting('margins', 'standard')}
+                    className={cn(
+                      'flex-1 py-2 rounded-lg border text-sm',
+                      settings.margins === 'standard'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
+                        : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
+                    )}
+                  >
+                    Padrão
+                  </button>
+                  <button
+                    onClick={() => updateSetting('margins', 'wide')}
+                    className={cn(
+                      'flex-1 py-2 rounded-lg border text-sm',
+                      settings.margins === 'wide'
+                        ? 'border-lime-400 text-lime-400 bg-lime-400/10'
+                        : 'border-zinc-800 text-zinc-400 hover:bg-zinc-900',
+                    )}
+                  >
+                    Larga
                   </button>
                 </div>
               </div>
@@ -295,7 +413,12 @@ export default function Reader() {
         </button>
       </div>
 
-      <main className="container mx-auto px-4 md:px-8 max-w-3xl mt-12 mb-20">
+      <main
+        className={cn(
+          'container mx-auto px-4 md:px-8 mt-12 mb-20 transition-all duration-300',
+          marginClasses[settings.margins] || 'max-w-3xl',
+        )}
+      >
         <h1 className="text-3xl md:text-4xl font-bold mb-12 text-center font-sans tracking-tight">
           {chapter.title}
         </h1>
@@ -346,7 +469,9 @@ export default function Reader() {
                       onClick={() => handleLocalUnlock('fast_pass')}
                       variant="outline"
                       className="flex-1 h-12 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold"
-                      disabled={wallet.fast_passes.reduce((a, b) => a + b.amount, 0) < 1}
+                      disabled={
+                        wallet.fast_passes.reduce((a: number, b: any) => a + b.amount, 0) < 1
+                      }
                     >
                       <Zap className="w-4 h-4 mr-2" /> Usar 1 Fast Pass
                     </Button>
@@ -362,7 +487,7 @@ export default function Reader() {
 
                 {wallet.coins < cost &&
                   (type === 'privilege' ||
-                    wallet.fast_passes.reduce((a, b) => a + b.amount, 0) < 1) && (
+                    wallet.fast_passes.reduce((a: number, b: any) => a + b.amount, 0) < 1) && (
                     <Link
                       to="/store"
                       className="mt-6 text-sm text-lime-400 hover:underline font-medium"
@@ -380,10 +505,13 @@ export default function Reader() {
 
           return (
             <div
-              className="font-serif whitespace-pre-wrap transition-all duration-300"
+              className={cn(
+                'whitespace-pre-wrap transition-all duration-300',
+                settings.fontFamily === 'serif' ? 'font-serif' : 'font-sans',
+              )}
               style={{
-                fontSize: `${fontSizeMap[settings.fontSize]}px`,
-                lineHeight: spacingMap[settings.spacing],
+                fontSize: `${settings.fontSize}px`,
+                lineHeight: lineHeightMap[settings.lineHeight] || 1.6,
               }}
             >
               {contentText}
@@ -392,7 +520,12 @@ export default function Reader() {
         })()}
       </main>
 
-      <div className="container mx-auto px-4 max-w-3xl flex flex-col gap-6">
+      <div
+        className={cn(
+          'container mx-auto px-4 flex flex-col gap-6 transition-all duration-300',
+          marginClasses[settings.margins] || 'max-w-3xl',
+        )}
+      >
         <div className="flex justify-center">
           <Button
             onClick={() => {
@@ -440,7 +573,12 @@ export default function Reader() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-3xl pb-10 mt-8">
+      <div
+        className={cn(
+          'container mx-auto px-4 pb-10 mt-8 transition-all duration-300',
+          marginClasses[settings.margins] || 'max-w-3xl',
+        )}
+      >
         <ChapterComments
           chapterId={chapter.id}
           novelAuthorId={novel.author}

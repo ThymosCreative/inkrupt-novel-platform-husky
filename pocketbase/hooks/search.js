@@ -45,13 +45,17 @@ routerAdd('POST', '/backend/v1/search', (e) => {
     for (const rec of keywordResults) {
       if (!seen.has(rec.id)) {
         seen.add(rec.id)
-        combined.push(rec)
+        const exp = JSON.parse(JSON.stringify(rec))
+        exp._matchType = 'keyword'
+        combined.push(exp)
       }
     }
     for (const rec of vecItems) {
       if (!seen.has(rec.id)) {
         seen.add(rec.id)
-        combined.push(rec)
+        const exp = JSON.parse(JSON.stringify(rec))
+        exp._matchType = 'semantic'
+        combined.push(exp)
       }
     }
 
