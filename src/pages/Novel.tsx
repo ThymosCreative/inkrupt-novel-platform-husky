@@ -350,8 +350,13 @@ export default function Novel() {
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-zinc-500">
         <h2 className="text-2xl font-bold text-white mb-2">Obra não encontrada</h2>
         <p>A novel que você está procurando não existe ou foi removida.</p>
-        <Link to="/explore" className="mt-6 text-lime-400 hover:underline">
-          Voltar para Explorar
+        <Link to="/">
+          <Button
+            variant="outline"
+            className="mt-6 border-lime-400 text-lime-400 hover:bg-lime-400/10 font-bold"
+          >
+            Voltar para o Início
+          </Button>
         </Link>
       </div>
     )
