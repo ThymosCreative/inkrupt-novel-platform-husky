@@ -309,7 +309,11 @@ export default function Reader() {
       </div>
 
       <div className="container mx-auto px-4 max-w-3xl pb-10">
-        <ChapterComments chapterId={chapter.id} theme={settings.theme} />
+        <ChapterComments
+          chapterId={chapter.id}
+          novelAuthorId={novel.author}
+          theme={settings.theme}
+        />
       </div>
     </div>
   )

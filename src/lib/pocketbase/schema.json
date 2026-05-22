@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T00:28:07.429Z",
+  "generatedAt": "2026-05-22T00:34:53.016Z",
   "collections": [
     {
       "name": "users",
@@ -164,11 +164,11 @@
       "name": "chapters",
       "type": "base",
       "apiRules": {
-        "list": "",
-        "view": "",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "status = 'published' || novel.author = @request.auth.id",
+        "view": "status = 'published' || novel.author = @request.auth.id",
+        "create": "@request.auth.id != '' && novel.author = @request.auth.id",
+        "update": "@request.auth.id != '' && novel.author = @request.auth.id",
+        "delete": "@request.auth.id != '' && novel.author = @request.auth.id"
       },
       "fields": [
         {
@@ -215,6 +215,19 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["draft", "published"]
+        },
+        {
+          "name": "published_at",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_chapters_novel_num ON chapters (novel, chapter_number)"]

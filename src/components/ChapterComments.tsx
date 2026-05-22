@@ -9,12 +9,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
+function timeAgo(dateString: string) {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return 'Agora mesmo'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m atrás`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h atrás`
+  return `${Math.floor(diffInSeconds / 86400)}d atrás`
+}
+
 interface ChapterCommentsProps {
   chapterId: string
+  novelAuthorId?: string
   theme?: string
 }
 
-export function ChapterComments({ chapterId, theme }: ChapterCommentsProps) {
+export function ChapterComments({ chapterId, novelAuthorId, theme }: ChapterCommentsProps) {
   const { user } = useAuth()
   const { toast } = useToast()
   const [comments, setComments] = useState<any[]>([])
@@ -156,9 +168,12 @@ export function ChapterComments({ chapterId, theme }: ChapterCommentsProps) {
                   <span className={cn('font-bold', textColor)}>
                     {comment.expand?.user?.name || 'User'}
                   </span>
-                  <span className={cn('text-xs', subtextColor)}>
-                    {new Date(comment.created).toLocaleDateString()}
-                  </span>
+                  {comment.expand?.user?.id === novelAuthorId && (
+                    <span className="bg-primary/20 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
+                      Autor
+                    </span>
+                  )}
+                  <span className={cn('text-xs', subtextColor)}>{timeAgo(comment.created)}</span>
                 </div>
                 <p className={cn('whitespace-pre-wrap text-sm', textColor)}>{comment.content}</p>
               </div>

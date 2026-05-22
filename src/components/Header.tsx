@@ -136,13 +136,26 @@ export function Header() {
     loadNotifications()
   }
 
+  const [isAuthor, setIsAuthor] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      pb.collection('novels')
+        .getFirstListItem(`author = "${user.id}"`)
+        .then(() => setIsAuthor(true))
+        .catch(() => setIsAuthor(false))
+    } else {
+      setIsAuthor(false)
+    }
+  }, [user])
+
   const navLinks = [
     { name: 'Início', path: '/' },
     { name: 'Explorar', path: '/explore' },
     ...(isAuthenticated
       ? [{ name: 'Biblioteca', path: '/library', badge: libraryCount > 0 ? libraryCount : null }]
       : []),
-    { name: 'Escrever', path: '/write' },
+    { name: isAuthor ? 'Área do Autor' : 'Escrever', path: isAuthor ? '/dashboard' : '/write' },
   ]
 
   useEffect(() => {
@@ -384,14 +397,38 @@ export function Header() {
               <Search className="w-5 h-5" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="text-muted-foreground hover:text-foreground rounded-full hidden sm:flex"
-            >
-              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground rounded-full hidden sm:flex"
+                >
+                  {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-xl">
+                <DropdownMenuItem
+                  onClick={() => setTheme('light')}
+                  className="cursor-pointer rounded-md m-1"
+                >
+                  Claro
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('dark')}
+                  className="cursor-pointer rounded-md m-1"
+                >
+                  Escuro
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('system')}
+                  className="cursor-pointer rounded-md m-1"
+                >
+                  Sistema
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2 sm:gap-4">
@@ -546,7 +583,7 @@ export function Header() {
                     >
                       <Link to="/settings" className="flex items-center w-full text-foreground/80">
                         <SettingsIcon className="mr-2 h-4 w-4" />
-                        <span>Configurações</span>
+                        <span>Editar Perfil / Configurações</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
