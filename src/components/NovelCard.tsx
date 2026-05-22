@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
-import { Eye, Star } from 'lucide-react'
+import { Eye, Star, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, getCoverUrl } from '@/services/api'
 
@@ -36,6 +36,16 @@ export function NovelCard({ novel, layout = 'vertical', className }: NovelCardPr
             {novel.title}
           </h4>
           <p className="text-xs text-zinc-400 mt-1">{authorName}</p>
+          <div className="flex items-center gap-2 mt-1">
+            {novel.genres && novel.genres.length > 0 && (
+              <Badge variant="outline" className="text-[9px] py-0 border-zinc-700 text-zinc-400">
+                {novel.genres[0]}
+              </Badge>
+            )}
+            <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+              <BookOpen className="w-3 h-3" /> {novel.chapter_count || 0}
+            </span>
+          </div>
         </div>
       </Link>
     )
@@ -74,8 +84,24 @@ export function NovelCard({ novel, layout = 'vertical', className }: NovelCardPr
             <span className="flex items-center gap-1">
               <Star className="w-3 h-3 text-lime-400" /> {novel.rating?.toFixed(1) || 'N/A'}
             </span>
+            <span className="flex items-center gap-1">
+              <BookOpen className="w-3 h-3" /> {novel.chapter_count || 0}
+            </span>
           </div>
           <p className="text-sm text-zinc-400 mt-2 line-clamp-2">{novel.description}</p>
+          {novel.genres && novel.genres.length > 0 && (
+            <div className="flex gap-1 mt-3">
+              {novel.genres.slice(0, 3).map((g: string) => (
+                <Badge
+                  key={g}
+                  variant="outline"
+                  className="text-[10px] py-0 border-zinc-800 text-zinc-400"
+                >
+                  {g}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </Link>
     )
@@ -106,6 +132,19 @@ export function NovelCard({ novel, layout = 'vertical', className }: NovelCardPr
           {novel.title}
         </h3>
         <p className="text-xs text-zinc-400 mt-1 truncate">{authorName}</p>
+        <div className="flex items-center justify-between mt-2">
+          {novel.genres && novel.genres.length > 0 && (
+            <Badge
+              variant="outline"
+              className="text-[10px] py-0 px-1 border-zinc-800 text-zinc-400 truncate max-w-[60%]"
+            >
+              {novel.genres[0]}
+            </Badge>
+          )}
+          <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+            <BookOpen className="w-3 h-3" /> {novel.chapter_count || 0}
+          </span>
+        </div>
       </div>
     </Link>
   )

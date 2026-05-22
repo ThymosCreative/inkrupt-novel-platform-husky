@@ -31,6 +31,14 @@ export const getTrendingNovels = async () => {
   })
 }
 
+export const getHiddenGems = async () => {
+  return pb.collection('novels').getList(1, 6, {
+    filter: 'rating >= 4.0 && reads < 1000',
+    expand: 'author',
+    sort: '-rating',
+  })
+}
+
 export interface SearchOptions {
   query?: string
   status?: string
@@ -38,15 +46,35 @@ export interface SearchOptions {
   genres?: string[]
   sort?: string
   limit?: number
+  minRating?: number
+  chapterRange?: string
 }
 
 export const searchNovels = async (options: SearchOptions = {}) => {
-  const { query = '', status, type, genres = [], sort = '-reads', limit = 20 } = options
+  const {
+    query = '',
+    status,
+    type,
+    genres = [],
+    sort = '-reads',
+    limit = 20,
+    minRating,
+    chapterRange,
+  } = options
 
   let filterStr = ''
   const filters = []
   if (status && status !== 'all') filters.push(`status = "${status}"`)
   if (type && type !== 'all') filters.push(`type = "${type}"`)
+  if (minRating) filters.push(`rating >= ${minRating}`)
+
+  if (chapterRange && chapterRange !== 'all') {
+    if (chapterRange === '1-10') filters.push('chapter_count >= 1 && chapter_count <= 10')
+    if (chapterRange === '10-50') filters.push('chapter_count > 10 && chapter_count <= 50')
+    if (chapterRange === '50-100') filters.push('chapter_count > 50 && chapter_count <= 100')
+    if (chapterRange === '100+') filters.push('chapter_count > 100')
+  }
+
   if (genres.length > 0) {
     const genreConditions = genres.map((g) => `genres ~ "${g}"`)
     filters.push(`(${genreConditions.join(' || ')})`)

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { searchNovels } from '@/services/api'
 import { NovelCard } from '@/components/NovelCard'
 import { Input } from '@/components/ui/input'
@@ -29,21 +30,28 @@ const GENRES = [
 ]
 
 export default function Search() {
+  const [searchParams] = useSearchParams()
+  const initialGenre = searchParams.get('genre')
+
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('all')
   const [type, setType] = useState('all')
-  const [genres, setGenres] = useState<string[]>([])
+  const [genres, setGenres] = useState<string[]>(initialGenre ? [initialGenre] : [])
   const [sort, setSort] = useState('-reads')
+  const [minRating, setMinRating] = useState<number | undefined>(undefined)
+  const [chapterRange, setChapterRange] = useState('all')
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(true)
-      searchNovels({ query, status, type, genres, sort, limit: 30 }).then((res) => {
-        setResults(res.items)
-        setLoading(false)
-      })
+      searchNovels({ query, status, type, genres, sort, minRating, chapterRange, limit: 30 }).then(
+        (res) => {
+          setResults(res.items)
+          setLoading(false)
+        },
+      )
     }, 500)
     return () => clearTimeout(timer)
   }, [query, status, type, genres, sort])
@@ -92,6 +100,60 @@ export default function Search() {
             </SelectItem>
             <SelectItem value="Tradução" className="focus:bg-zinc-800">
               Tradução
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="font-bold text-sm text-zinc-400 uppercase tracking-wider">
+          Avaliação (Min)
+        </h3>
+        <Select
+          value={minRating?.toString() || 'all'}
+          onValueChange={(v) => setMinRating(v === 'all' ? undefined : Number(v))}
+        >
+          <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 focus:ring-lime-400">
+            <SelectValue placeholder="Qualquer" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-800">
+            <SelectItem value="all" className="focus:bg-zinc-800">
+              Qualquer
+            </SelectItem>
+            <SelectItem value="3" className="focus:bg-zinc-800">
+              3.0+
+            </SelectItem>
+            <SelectItem value="4" className="focus:bg-zinc-800">
+              4.0+
+            </SelectItem>
+            <SelectItem value="4.5" className="focus:bg-zinc-800">
+              4.5+
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="font-bold text-sm text-zinc-400 uppercase tracking-wider">Capítulos</h3>
+        <Select value={chapterRange} onValueChange={setChapterRange}>
+          <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 focus:ring-lime-400">
+            <SelectValue placeholder="Qualquer" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-800">
+            <SelectItem value="all" className="focus:bg-zinc-800">
+              Qualquer
+            </SelectItem>
+            <SelectItem value="1-10" className="focus:bg-zinc-800">
+              1 a 10
+            </SelectItem>
+            <SelectItem value="10-50" className="focus:bg-zinc-800">
+              10 a 50
+            </SelectItem>
+            <SelectItem value="50-100" className="focus:bg-zinc-800">
+              50 a 100
+            </SelectItem>
+            <SelectItem value="100+" className="focus:bg-zinc-800">
+              100+
             </SelectItem>
           </SelectContent>
         </Select>
@@ -207,6 +269,8 @@ export default function Search() {
                     setType('all')
                     setGenres([])
                     setSort('-reads')
+                    setMinRating(undefined)
+                    setChapterRange('all')
                   }}
                   className="mt-4 text-lime-400 hover:text-lime-300"
                 >

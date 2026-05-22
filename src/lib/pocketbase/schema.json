@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T01:26:53.862Z",
+  "generatedAt": "2026-05-22T01:35:21.116Z",
   "collections": [
     {
       "name": "users",
@@ -157,13 +157,27 @@
           "system": false,
           "vectorDimensions": 1536,
           "vectorDistance": "l2"
+        },
+        {
+          "name": "chapter_count",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "last_updated_at",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
         "CREATE INDEX idx_novels_rating ON novels (rating DESC)",
         "CREATE INDEX idx_novels_reads ON novels (reads DESC)",
         "CREATE INDEX idx_novels_created ON novels (created DESC)",
-        "CREATE INDEX `idx_novels_title` ON `novels` (title)"
+        "CREATE INDEX `idx_novels_title` ON `novels` (title)",
+        "CREATE INDEX `idx_novels_chapter_count` ON `novels` (chapter_count)",
+        "CREATE INDEX `idx_novels_last_updated_at` ON `novels` (last_updated_at DESC)"
       ]
     },
     {
