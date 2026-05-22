@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { AuthModal } from './AuthModal'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
@@ -26,6 +27,17 @@ import { useAuth } from '@/hooks/use-auth'
 import { searchNovels, getCoverUrl } from '@/services/api'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
+
+function timeAgo(dateString: string) {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return 'Agora mesmo'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m atrás`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h atrás`
+  return `${Math.floor(diffInSeconds / 86400)}d atrás`
+}
 
 const getHistory = () => {
   try {
@@ -63,6 +75,61 @@ export function Header() {
   const searchRef = useRef<HTMLDivElement>(null)
 
   const [libraryCount, setLibraryCount] = useState(0)
+  const [notifications, setNotifications] = useState<any[]>([])
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length
+
+  const loadNotifications = () => {
+    if (!user) return
+    pb.collection('notifications')
+      .getList(1, 10, { filter: `user = "${user.id}"`, sort: '-created', expand: 'novel,chapter' })
+      .then((res) => setNotifications(res.items))
+      .catch(() => {})
+  }
+
+  useEffect(() => {
+    loadNotifications()
+  }, [user])
+
+  useRealtime(
+    'notifications',
+    (e) => {
+      if (user && e.record.user === user.id) {
+        loadNotifications()
+      }
+    },
+    !!user,
+  )
+
+  const handleNotificationClick = async (notif: any) => {
+    if (!notif.is_read) {
+      try {
+        await pb.collection('notifications').update(notif.id, { is_read: true })
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n)),
+        )
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    const novelId = notif.novel
+    const chapterNum = notif.expand?.chapter?.chapter_number
+    if (novelId && chapterNum) {
+      navigate(`/novel/${novelId}/chapter/${chapterNum}`)
+    }
+  }
+
+  const markAllAsRead = async () => {
+    const unread = notifications.filter((n) => !n.is_read)
+    for (const n of unread) {
+      try {
+        await pb.collection('notifications').update(n.id, { is_read: true })
+      } catch {
+        /* intentionally ignored */
+      }
+    }
+    loadNotifications()
+  }
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -315,17 +382,78 @@ export function Header() {
             </Button>
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-zinc-400 hover:text-white rounded-full hidden sm:flex"
-                >
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-lime-400 rounded-full text-[10px] text-black font-bold flex items-center justify-center">
-                    3
-                  </span>
-                </Button>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative text-zinc-400 hover:text-white rounded-full flex"
+                    >
+                      <Bell className="w-5 h-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-0 right-0 w-4 h-4 bg-lime-400 rounded-full text-[10px] text-black font-bold flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="end"
+                    className="w-[calc(100vw-2rem)] sm:w-80 bg-zinc-900 border-zinc-800 p-0 rounded-xl shadow-xl overflow-hidden z-50"
+                  >
+                    <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-black/40">
+                      <h3 className="font-bold text-white text-sm">Notificações</h3>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="text-xs text-lime-400 hover:text-lime-300 font-medium transition-colors"
+                        >
+                          Marcar todas como lidas
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-[350px] overflow-y-auto overscroll-contain">
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
+                          <Bell className="w-8 h-8 text-zinc-700" />
+                          <p className="text-sm text-zinc-500 font-medium">Nenhuma notificação</p>
+                        </div>
+                      ) : (
+                        notifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            onClick={() => handleNotificationClick(notif)}
+                            className={cn(
+                              'p-4 border-b border-zinc-800/50 cursor-pointer transition-colors last:border-0 hover:bg-zinc-800/80',
+                              !notif.is_read ? 'bg-lime-400/5' : 'bg-transparent',
+                            )}
+                          >
+                            <div className="flex gap-3">
+                              <div
+                                className={cn(
+                                  'w-2 h-2 rounded-full mt-1.5 shrink-0',
+                                  !notif.is_read ? 'bg-lime-400' : 'bg-transparent',
+                                )}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-zinc-300 leading-snug">
+                                  <span className="font-bold text-white">
+                                    {notif.expand?.novel?.title}
+                                  </span>
+                                  : {notif.message.replace('Um novo capítulo foi publicado: ', '')}
+                                </p>
+                                <span className="text-xs text-zinc-500 mt-1.5 block font-medium">
+                                  {timeAgo(notif.created)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Avatar className="w-9 h-9 border-2 border-lime-400 transition-colors cursor-pointer bg-zinc-800 hover:opacity-80">

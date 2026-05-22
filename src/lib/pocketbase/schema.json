@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T00:07:07.643Z",
+  "generatedAt": "2026-05-22T00:11:14.154Z",
   "collections": [
     {
       "name": "users",
@@ -370,6 +370,70 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_comments_chapter ON comments (chapter, created DESC)"]
+    },
+    {
+      "name": "notifications",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": null,
+        "update": "@request.auth.id != '' && user = @request.auth.id",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "novel",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "novels"
+        },
+        {
+          "name": "chapter",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "chapters"
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "is_read",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_notifications_user ON notifications (user, created DESC)",
+        "CREATE INDEX idx_notifications_read ON notifications (user, is_read)"
+      ]
     }
   ]
 }
