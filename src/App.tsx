@@ -9,7 +9,6 @@ import Novel from './pages/Novel'
 import Reader from './pages/Reader'
 import ReadingList from './pages/ReadingList'
 import Profile from './pages/Profile'
-import Author from './pages/Author'
 import Settings from './pages/Settings'
 import Library from './pages/Library'
 import NotFound from './pages/NotFound'
@@ -17,12 +16,22 @@ import Layout from './components/Layout'
 import { AuthProvider, useAuth } from './hooks/use-auth'
 import { Navigate } from 'react-router-dom'
 import { ThemeProvider } from './components/ThemeProvider'
-import Dashboard from './pages/Dashboard'
+import StudioDashboard from './pages/Studio/Dashboard'
+import StudioNovel from './pages/Studio/Novel'
+import StudioChapter from './pages/Studio/Chapter'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth()
   if (loading) return null
   return isAuthenticated ? <>{children}</> : <Navigate to="/" />
+}
+
+const AuthorRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isAuthenticated, loading } = useAuth()
+  if (loading) return null
+  if (!isAuthenticated) return <Navigate to="/" />
+  if (!user?.is_author) return <Navigate to="/" />
+  return <>{children}</>
 }
 
 const App = () => (
@@ -51,19 +60,27 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:id" element={<Profile />} />
               <Route
-                path="/dashboard"
+                path="/studio"
                 element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
+                  <AuthorRoute>
+                    <StudioDashboard />
+                  </AuthorRoute>
                 }
               />
               <Route
-                path="/write"
+                path="/studio/novel/:id"
                 element={
-                  <ProtectedRoute>
-                    <Author />
-                  </ProtectedRoute>
+                  <AuthorRoute>
+                    <StudioNovel />
+                  </AuthorRoute>
+                }
+              />
+              <Route
+                path="/studio/novel/:id/chapter/:chapterId"
+                element={
+                  <AuthorRoute>
+                    <StudioChapter />
+                  </AuthorRoute>
                 }
               />
               <Route

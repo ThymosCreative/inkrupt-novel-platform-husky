@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T00:34:53.016Z",
+  "generatedAt": "2026-05-22T00:40:38.473Z",
   "collections": [
     {
       "name": "users",
@@ -47,6 +47,12 @@
         {
           "name": "bio",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_author",
+          "type": "bool",
           "required": false,
           "system": false
         }

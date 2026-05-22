@@ -136,26 +136,13 @@ export function Header() {
     loadNotifications()
   }
 
-  const [isAuthor, setIsAuthor] = useState(false)
-
-  useEffect(() => {
-    if (user) {
-      pb.collection('novels')
-        .getFirstListItem(`author = "${user.id}"`)
-        .then(() => setIsAuthor(true))
-        .catch(() => setIsAuthor(false))
-    } else {
-      setIsAuthor(false)
-    }
-  }, [user])
-
   const navLinks = [
     { name: 'Início', path: '/' },
     { name: 'Explorar', path: '/explore' },
     ...(isAuthenticated
       ? [{ name: 'Biblioteca', path: '/library', badge: libraryCount > 0 ? libraryCount : null }]
       : []),
-    { name: isAuthor ? 'Área do Autor' : 'Escrever', path: isAuthor ? '/dashboard' : '/write' },
+    ...(user?.is_author ? [{ name: 'Studio', path: '/studio' }] : []),
   ]
 
   useEffect(() => {
@@ -559,15 +546,32 @@ export function Header() {
                         <span>Meu Perfil</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      asChild
-                      className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md m-1"
-                    >
-                      <Link to="/dashboard" className="flex items-center w-full text-foreground/80">
+                    {user?.is_author ? (
+                      <DropdownMenuItem
+                        asChild
+                        className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md m-1"
+                      >
+                        <Link to="/studio" className="flex items-center w-full text-foreground/80">
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          <span>Studio</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          try {
+                            await pb.collection('users').update(user.id, { is_author: true })
+                            await pb.collection('users').authRefresh()
+                          } catch (err) {
+                            console.error(err)
+                          }
+                        }}
+                        className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md m-1 text-foreground/80"
+                      >
                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                    </DropdownMenuItem>
+                        <span>Tornar-se Autor</span>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       asChild
                       className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md m-1"
