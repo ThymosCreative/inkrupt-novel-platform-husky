@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T14:35:30.412Z",
+  "generatedAt": "2026-05-22T14:51:12.678Z",
   "collections": [
     {
       "name": "users",
@@ -473,6 +473,19 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "likes",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "parent_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "comments"
         }
       ],
       "indexes": ["CREATE INDEX idx_comments_chapter ON comments (chapter, created DESC)"]
@@ -833,6 +846,51 @@
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_unlocked_chapters_user_chapter ON unlocked_chapters (user, chapter)"
+      ]
+    },
+    {
+      "name": "comment_likes",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": null,
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "comment",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "comments"
+        },
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_comment_likes_unique ON comment_likes (comment, user)",
+        "CREATE INDEX idx_comment_likes_user ON comment_likes (user)"
       ]
     }
   ]

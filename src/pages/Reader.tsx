@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import {
   Settings,
   AlignJustify,
-  Bookmark,
+  BookmarkPlus,
   MessageCircle,
   ChevronLeft,
   ChevronRight,
@@ -219,6 +219,12 @@ export default function Reader() {
       isActive ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-800 hover:text-white',
     )
 
+  const bookmarkBtnClass = (isActive: boolean) =>
+    cn(
+      'w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer',
+      isActive ? 'text-white opacity-100' : 'text-zinc-500 opacity-50',
+    )
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-black">
@@ -333,22 +339,6 @@ export default function Reader() {
               <Zap className={cn('w-3 h-3 mr-1.5', hasVoted ? 'fill-current' : '')} />
               Votar
             </Button>
-            <div
-              className={cn(
-                'border-r h-4',
-                settings.theme === 'dark' ? 'border-zinc-700' : 'border-zinc-300',
-              )}
-            ></div>
-            <button
-              className={cn(
-                'transition-colors cursor-pointer',
-                settings.theme === 'dark'
-                  ? 'text-zinc-400 hover:text-white'
-                  : 'text-zinc-400 hover:text-zinc-700',
-              )}
-            >
-              <Search className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </header>
@@ -367,11 +357,11 @@ export default function Reader() {
         >
           <AlignJustify className="w-[18px] h-[18px]" strokeWidth={1.5} />
         </button>
-        <button onClick={handleBookmark} className={sidebarBtnClass(isBookmarked)}>
+        <button onClick={handleBookmark} className={bookmarkBtnClass(isBookmarked)}>
           {isBookmarked ? (
             <BookmarkCheck className="w-[18px] h-[18px]" strokeWidth={1.5} />
           ) : (
-            <Bookmark className="w-[18px] h-[18px]" strokeWidth={1.5} />
+            <BookmarkPlus className="w-[18px] h-[18px]" strokeWidth={1.5} />
           )}
         </button>
         <button
