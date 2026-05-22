@@ -213,16 +213,34 @@ export default function Reader() {
     (v: any) => v.novel_id === novel?.id && v.voted_at > new Date().setHours(0, 0, 0, 0),
   )
 
+  const isDarkTheme = settings.theme === 'dark'
+
   const sidebarBtnClass = (isActive: boolean) =>
     cn(
       'w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200',
-      isActive ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-800 hover:text-white',
+      isActive
+        ? isDarkTheme
+          ? 'bg-zinc-800 text-white'
+          : 'bg-zinc-200 text-zinc-900'
+        : cn(
+            'text-zinc-500',
+            isDarkTheme
+              ? 'hover:bg-zinc-800 hover:text-white'
+              : 'hover:bg-zinc-200 hover:text-zinc-900',
+          ),
     )
 
   const bookmarkBtnClass = (isActive: boolean) =>
     cn(
       'w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer',
-      isActive ? 'text-white opacity-100' : 'text-zinc-500 opacity-50',
+      isActive
+        ? 'text-white'
+        : cn(
+            'text-zinc-500',
+            isDarkTheme
+              ? 'hover:bg-zinc-800 hover:text-white'
+              : 'hover:bg-zinc-200 hover:text-zinc-900',
+          ),
     )
 
   if (loading) {
