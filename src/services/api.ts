@@ -120,9 +120,13 @@ export const searchNovels = async (options: SearchOptions = {}) => {
 }
 
 export const getComments = async (chapterId: string) => {
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('chapter = {:id}', { id: chapterId })
+      : `chapter = "${chapterId}"`
   return pb
     .collection('comments')
-    .getFullList({ filter: `chapter = "${chapterId}"`, expand: 'user', sort: '-created' })
+    .getFullList({ filter: filterStr, expand: 'user', sort: '-created' })
 }
 
 export const createComment = async (chapterId: string, content: string, userId: string) => {
@@ -134,33 +138,49 @@ export const getNovel = async (id: string) => {
 }
 
 export const getChapters = async (novelId: string) => {
-  return pb
-    .collection('chapters')
-    .getFullList({ filter: `novel = "${novelId}"`, sort: 'chapter_number' })
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('novel = {:id}', { id: novelId })
+      : `novel = "${novelId}"`
+  return pb.collection('chapters').getFullList({ filter: filterStr, sort: 'chapter_number' })
 }
 
 export const getChapterByNum = async (novelId: string, num: number) => {
-  return pb
-    .collection('chapters')
-    .getFirstListItem(`novel = "${novelId}" && chapter_number = ${num}`)
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('novel = {:id} && chapter_number = {:num}', { id: novelId, num })
+      : `novel = "${novelId}" && chapter_number = ${num}`
+  return pb.collection('chapters').getFirstListItem(filterStr)
 }
 
 export const getReviews = async (novelId: string) => {
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('novel = {:id}', { id: novelId })
+      : `novel = "${novelId}"`
   return pb
     .collection('reviews')
-    .getFullList({ filter: `novel = "${novelId}"`, expand: 'user', sort: '-created' })
+    .getFullList({ filter: filterStr, expand: 'user', sort: '-created' })
 }
 
 export const getLibrary = async (userId: string) => {
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('user = {:id}', { id: userId })
+      : `user = "${userId}"`
   return pb
     .collection('library_entries')
-    .getFullList({ filter: `user = "${userId}"`, expand: 'novel,last_chapter', sort: '-updated' })
+    .getFullList({ filter: filterStr, expand: 'novel,last_chapter', sort: '-updated' })
 }
 
 export const getNovelDiscussions = async (novelId: string) => {
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('novel = {:id}', { id: novelId })
+      : `novel = "${novelId}"`
   return pb
     .collection('novel_discussions')
-    .getFullList({ filter: `novel = "${novelId}"`, expand: 'user', sort: '-created' })
+    .getFullList({ filter: filterStr, expand: 'user', sort: '-created' })
 }
 
 export const createNovelDiscussion = async (novelId: string, content: string, userId: string) => {
@@ -172,17 +192,23 @@ export const deleteNovelDiscussion = async (id: string) => {
 }
 
 export const getAuthorFollowerCount = async (authorId: string) => {
+  const filterStr =
+    typeof pb.filter === 'function'
+      ? pb.filter('author = {:id}', { id: authorId })
+      : `author="${authorId}"`
   const result = await pb.collection('author_follows').getList(1, 1, {
-    filter: `author="${authorId}"`,
+    filter: filterStr,
   })
   return result.totalItems
 }
 
 export const checkIsFollowing = async (followerId: string, authorId: string) => {
   try {
-    return await pb
-      .collection('author_follows')
-      .getFirstListItem(`follower="${followerId}" && author="${authorId}"`)
+    const filterStr =
+      typeof pb.filter === 'function'
+        ? pb.filter('follower = {:fid} && author = {:aid}', { fid: followerId, aid: authorId })
+        : `follower="${followerId}" && author="${authorId}"`
+    return await pb.collection('author_follows').getFirstListItem(filterStr)
   } catch (e) {
     return null
   }
@@ -218,7 +244,11 @@ export const sendVoteToBackend = async (novelId: string) => {
 
 export const getAuthorApplication = async (userId: string) => {
   try {
-    return await pb.collection('author_applications').getFirstListItem(`user="${userId}"`)
+    const filterStr =
+      typeof pb.filter === 'function'
+        ? pb.filter('user = {:id}', { id: userId })
+        : `user="${userId}"`
+    return await pb.collection('author_applications').getFirstListItem(filterStr)
   } catch {
     return null
   }

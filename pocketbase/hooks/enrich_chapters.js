@@ -2,9 +2,22 @@ onRecordEnrich((e) => {
   if (!e.record) return e.next()
 
   const isPremium = e.record.getBool('is_premium')
-  if (!isPremium) return e.next()
+  const type = e.record.getString('type')
+  if (!isPremium && type !== 'premium' && type !== 'privilege') return e.next()
 
-  const userId = e.requestInfo().auth?.id
+  let userId = null
+  try {
+    if (typeof e.requestInfo === 'function') {
+      const reqInfo = e.requestInfo()
+      if (reqInfo && reqInfo.auth) {
+        userId = reqInfo.auth.id
+      }
+    } else if (e.auth) {
+      userId = e.auth.id
+    }
+  } catch (_) {
+    // Graceful catch for context absence to prevent server panics
+  }
 
   let isAuthor = false
   try {
@@ -15,7 +28,9 @@ onRecordEnrich((e) => {
         isAuthor = true
       }
     }
-  } catch (_) {}
+  } catch (_) {
+    // Graceful catch for lookup failures (e.g. invalid novel ID format)
+  }
 
   if (isAuthor) return e.next()
 
