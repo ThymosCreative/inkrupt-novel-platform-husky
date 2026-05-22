@@ -339,8 +339,22 @@ export default function Novel() {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-lime-400">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="pb-20">
+        <div className="w-full h-[300px] bg-zinc-900 animate-pulse" />
+        <div className="container mx-auto px-4 -mt-32 relative z-10">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <Skeleton className="w-[220px] h-[330px] rounded-2xl shrink-0 mx-auto md:mx-0 bg-zinc-800" />
+            <div className="flex-1 pt-4 md:pt-12 w-full flex flex-col items-center md:items-start">
+              <Skeleton className="h-12 w-3/4 max-w-[400px] mb-4 bg-zinc-800" />
+              <Skeleton className="h-6 w-1/2 max-w-[200px] mb-8 bg-zinc-800" />
+              <div className="flex gap-4">
+                <Skeleton className="h-12 w-32 rounded-xl bg-zinc-800" />
+                <Skeleton className="h-12 w-32 rounded-xl bg-zinc-800" />
+                <Skeleton className="h-12 w-32 rounded-xl bg-zinc-800" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
