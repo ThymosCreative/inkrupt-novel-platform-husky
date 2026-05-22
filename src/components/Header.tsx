@@ -9,8 +9,6 @@ import {
   LogOut,
   Clock,
   BookOpen,
-  Sun,
-  Moon,
   LayoutDashboard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -30,7 +28,6 @@ import { useAuth } from '@/hooks/use-auth'
 import { searchNovels, getCoverUrl } from '@/services/api'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
-import { useTheme } from '@/components/ThemeProvider'
 import { Coins, Zap } from 'lucide-react'
 import { useWallet } from '@/hooks/use-wallet'
 
@@ -64,7 +61,6 @@ const saveHistory = (q: string) => {
 export function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const { user, isAuthenticated, signOut } = useAuth()
-  const { theme, setTheme } = useTheme()
   const { wallet, totalFastPasses } = useWallet()
   const location = useLocation()
   const navigate = useNavigate()
@@ -396,39 +392,6 @@ export function Header() {
             >
               <Search className="w-5 h-5" />
             </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground rounded-full hidden sm:flex"
-                >
-                  {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="rounded-xl">
-                <DropdownMenuItem
-                  onClick={() => setTheme('light')}
-                  className="cursor-pointer rounded-md m-1"
-                >
-                  Claro
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setTheme('dark')}
-                  className="cursor-pointer rounded-md m-1"
-                >
-                  Escuro
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setTheme('system')}
-                  className="cursor-pointer rounded-md m-1"
-                >
-                  Sistema
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2 sm:gap-4">

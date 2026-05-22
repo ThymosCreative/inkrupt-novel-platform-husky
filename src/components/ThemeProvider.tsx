@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 
@@ -32,6 +33,9 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
   )
   const { user, isAuthenticated } = useAuth()
+  const location = useLocation()
+
+  const isReader = /^\/novel\/[^/]+\/chapter\/\d+/.test(location.pathname)
 
   useEffect(() => {
     if (
@@ -48,7 +52,9 @@ export function ThemeProvider({
 
     root.classList.remove('light', 'dark', 'sepia')
 
-    if (theme === 'system') {
+    const activeTheme = isReader ? theme : 'dark'
+
+    if (activeTheme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light'
@@ -57,8 +63,8 @@ export function ThemeProvider({
       return
     }
 
-    root.classList.add(theme)
-  }, [theme])
+    root.classList.add(activeTheme)
+  }, [theme, isReader])
 
   const setTheme = async (newTheme: Theme) => {
     setThemeState(newTheme)

@@ -39,8 +39,8 @@ const AuthorRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => (
   <AuthProvider>
     <WalletProvider>
-      <ThemeProvider>
-        <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+      <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        <ThemeProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -106,8 +106,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
-        </BrowserRouter>
-      </ThemeProvider>
+        </ThemeProvider>
+      </BrowserRouter>
     </WalletProvider>
   </AuthProvider>
 )

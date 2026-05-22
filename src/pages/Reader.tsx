@@ -29,6 +29,7 @@ import { useWallet } from '@/hooks/use-wallet'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Progress } from '@/components/ui/progress'
+import { useTheme } from '@/components/ThemeProvider'
 
 export default function Reader() {
   const { id, num } = useParams()
@@ -52,8 +53,9 @@ export default function Reader() {
   const [commentsCount, setCommentsCount] = useState(0)
   const [showUI, setShowUI] = useState(true)
 
+  const { theme, setTheme } = useTheme()
+
   const [settings, setSettings] = useState({
-    theme: user?.preferences?.theme || 'dark',
     fontFamily: user?.preferences?.fontFamily || 'sans',
     fontSize: user?.preferences?.fontSize || 18,
     lineHeight: user?.preferences?.lineHeight || 'normal',
@@ -67,6 +69,10 @@ export default function Reader() {
   }, [user?.preferences])
 
   const updateSetting = (key: string, value: string | number | boolean) => {
+    if (key === 'theme') {
+      setTheme(value as any)
+      return
+    }
     const newSettings = { ...settings, [key]: value }
     setSettings(newSettings)
     if (user) {
@@ -213,7 +219,7 @@ export default function Reader() {
     (v: any) => v.novel_id === novel?.id && v.voted_at > new Date().setHours(0, 0, 0, 0),
   )
 
-  const isDarkTheme = settings.theme === 'dark'
+  const isDarkTheme = theme === 'dark' || theme === 'system'
 
   const sidebarBtnClass = (isActive: boolean) =>
     cn(
@@ -271,12 +277,14 @@ export default function Reader() {
     dark: 'bg-black text-slate-300',
     sepia: 'bg-[#F2E8D9] text-[#3D2B1F]',
     light: 'bg-white text-black',
+    system: 'bg-black text-slate-300',
   }
 
   const headerThemeClasses = {
     dark: 'bg-zinc-950 border-zinc-800 text-white',
     sepia: 'bg-[#EBE0CE] border-[#C8B89A] text-[#3D2B1F]',
     light: 'bg-white border-zinc-200 text-zinc-900',
+    system: 'bg-zinc-950 border-zinc-800 text-white',
   }
 
   const isAuthor = user && novel?.author === user.id
@@ -286,7 +294,7 @@ export default function Reader() {
     <div
       className={cn(
         'min-h-screen transition-colors duration-500 pb-32 overflow-x-hidden',
-        themeClasses[settings.theme as keyof typeof themeClasses] || themeClasses.dark,
+        themeClasses[theme as keyof typeof themeClasses] || themeClasses.dark,
       )}
     >
       <div className="fixed top-0 left-0 w-full h-0.5 bg-black/10 z-50">
@@ -299,8 +307,7 @@ export default function Reader() {
       <header
         className={cn(
           'fixed top-0 z-40 w-full backdrop-blur-md border-b transition-opacity duration-300',
-          headerThemeClasses[settings.theme as keyof typeof headerThemeClasses] ||
-            headerThemeClasses.dark,
+          headerThemeClasses[theme as keyof typeof headerThemeClasses] || headerThemeClasses.dark,
           showUI || activeDrawer
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none',
@@ -321,7 +328,7 @@ export default function Reader() {
             <div
               className={cn(
                 'border-r h-4 mx-3 hidden sm:block',
-                settings.theme === 'dark' ? 'border-zinc-700' : 'border-zinc-300',
+                theme === 'dark' || theme === 'system' ? 'border-zinc-700' : 'border-zinc-300',
               )}
             ></div>
             <span className="text-sm text-zinc-500 truncate max-w-[200px] hidden sm:inline-block">
@@ -346,9 +353,9 @@ export default function Reader() {
               }}
               className={cn(
                 'transition-colors rounded-xl px-3 py-1 h-7 font-semibold border text-xs',
-                settings.theme === 'dark'
+                theme === 'dark' || theme === 'system'
                   ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
-                  : settings.theme === 'sepia'
+                  : theme === 'sepia'
                     ? 'bg-[#C8B89A] text-[#3D2B1F] border-transparent hover:opacity-80'
                     : 'bg-zinc-900 text-white border-transparent hover:bg-zinc-800',
                 hasVoted ? 'opacity-50' : '',
@@ -418,21 +425,21 @@ export default function Reader() {
                     onClick={() => updateSetting('theme', 'dark')}
                     className={cn(
                       'w-10 h-10 rounded-full bg-black border-2 border-zinc-600 outline-none transition-all',
-                      settings.theme === 'dark' ? 'ring-2 ring-white' : '',
+                      theme === 'dark' || theme === 'system' ? 'ring-2 ring-white' : '',
                     )}
                   />
                   <button
                     onClick={() => updateSetting('theme', 'sepia')}
                     className={cn(
                       'w-10 h-10 rounded-full bg-[#F2E8D9] border-2 border-[#C8B89A] outline-none transition-all',
-                      settings.theme === 'sepia' ? 'ring-2 ring-[#3D2B1F]' : '',
+                      theme === 'sepia' ? 'ring-2 ring-[#3D2B1F]' : '',
                     )}
                   />
                   <button
                     onClick={() => updateSetting('theme', 'light')}
                     className={cn(
                       'w-10 h-10 rounded-full bg-white border-2 border-zinc-300 outline-none transition-all',
-                      settings.theme === 'light' ? 'ring-2 ring-zinc-900' : '',
+                      theme === 'light' ? 'ring-2 ring-zinc-900' : '',
                     )}
                   />
                 </div>
@@ -695,9 +702,9 @@ export default function Reader() {
         <div
           className={cn(
             'flex justify-center items-center gap-16 py-8 border-t border-b my-8',
-            settings.theme === 'dark'
+            theme === 'dark' || theme === 'system'
               ? 'border-zinc-800'
-              : settings.theme === 'sepia'
+              : theme === 'sepia'
                 ? 'border-[#C8B89A]'
                 : 'border-zinc-200',
           )}
@@ -709,9 +716,9 @@ export default function Reader() {
             <MessageCircle
               className={cn(
                 'w-[22px] h-[22px] transition-colors',
-                settings.theme === 'dark'
+                theme === 'dark' || theme === 'system'
                   ? 'text-zinc-400 group-hover:text-white'
-                  : settings.theme === 'sepia'
+                  : theme === 'sepia'
                     ? 'text-[#9C8467] group-hover:text-[#3D2B1F]'
                     : 'text-zinc-400 group-hover:text-zinc-700',
               )}
@@ -719,7 +726,7 @@ export default function Reader() {
             <span
               className={cn(
                 'text-[10px] font-semibold tracking-widest uppercase mt-1',
-                settings.theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
+                theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
               )}
             >
               Comentar
@@ -727,7 +734,7 @@ export default function Reader() {
             <span
               className={cn(
                 'text-xs mt-0.5',
-                settings.theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
+                theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
               )}
             >
               {commentsCount}
@@ -747,14 +754,14 @@ export default function Reader() {
               className={cn(
                 'w-[22px] h-[22px] transition-colors',
                 hasVoted
-                  ? settings.theme === 'dark'
+                  ? theme === 'dark' || theme === 'system'
                     ? 'text-white fill-white'
-                    : settings.theme === 'sepia'
+                    : theme === 'sepia'
                       ? 'text-[#3D2B1F] fill-[#3D2B1F]'
                       : 'text-zinc-900 fill-zinc-900'
-                  : settings.theme === 'dark'
+                  : theme === 'dark' || theme === 'system'
                     ? 'text-zinc-400 group-hover:text-white'
-                    : settings.theme === 'sepia'
+                    : theme === 'sepia'
                       ? 'text-[#9C8467] group-hover:text-[#3D2B1F]'
                       : 'text-zinc-400 group-hover:text-zinc-700',
               )}
@@ -763,12 +770,12 @@ export default function Reader() {
               className={cn(
                 'text-[10px] font-semibold tracking-widest uppercase mt-1 transition-colors',
                 hasVoted
-                  ? settings.theme === 'dark'
+                  ? theme === 'dark' || theme === 'system'
                     ? 'text-white'
-                    : settings.theme === 'sepia'
+                    : theme === 'sepia'
                       ? 'text-[#3D2B1F]'
                       : 'text-zinc-900'
-                  : settings.theme === 'sepia'
+                  : theme === 'sepia'
                     ? 'text-[#9C8467]'
                     : 'text-zinc-400',
               )}
@@ -778,7 +785,7 @@ export default function Reader() {
             <span
               className={cn(
                 'text-xs mt-0.5',
-                settings.theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
+                theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
               )}
             >
               {novel.power_stones_count || 0}
@@ -791,20 +798,20 @@ export default function Reader() {
             <Gift
               className={cn(
                 'w-[22px] h-[22px] transition-colors',
-                settings.theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-300',
+                theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-300',
               )}
             />
             <span
               className={cn(
                 'text-[10px] font-semibold tracking-widest uppercase mt-1 flex flex-col items-center',
-                settings.theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-300',
+                theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-300',
               )}
             >
               Presente
               <span
                 className={cn(
                   'text-[10px] font-normal normal-case tracking-normal mt-0.5',
-                  settings.theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
+                  theme === 'sepia' ? 'text-[#9C8467]' : 'text-zinc-400',
                 )}
               >
                 Em breve
@@ -821,9 +828,9 @@ export default function Reader() {
             disabled={chapterNum <= 1}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed',
-              settings.theme === 'dark'
+              theme === 'dark' || theme === 'system'
                 ? 'bg-transparent border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'
-                : settings.theme === 'sepia'
+                : theme === 'sepia'
                   ? 'bg-transparent border border-[#C8B89A] text-[#9C8467] hover:border-[#9C8467] hover:text-[#3D2B1F]'
                   : 'bg-transparent border border-zinc-300 text-zinc-600 hover:border-zinc-500 hover:text-zinc-900',
             )}
@@ -836,9 +843,9 @@ export default function Reader() {
             disabled={chapterNum >= totalChapters}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 rounded-xl px-8 py-4 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed',
-              settings.theme === 'dark'
+              theme === 'dark' || theme === 'system'
                 ? 'bg-white text-black hover:bg-zinc-200 border border-transparent'
-                : settings.theme === 'sepia'
+                : theme === 'sepia'
                   ? 'bg-[#3D2B1F] text-[#F2E8D9] border border-[#3D2B1F] hover:opacity-90'
                   : 'bg-zinc-900 text-white border border-zinc-900 hover:bg-zinc-700',
             )}
