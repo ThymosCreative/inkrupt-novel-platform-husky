@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T01:35:21.116Z",
+  "generatedAt": "2026-05-22T01:41:33.899Z",
   "collections": [
     {
       "name": "users",
@@ -53,6 +53,12 @@
         {
           "name": "is_author",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "coins",
+          "type": "number",
           "required": false,
           "system": false
         }
@@ -169,6 +175,12 @@
           "type": "date",
           "required": false,
           "system": false
+        },
+        {
+          "name": "has_premium",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -246,6 +258,12 @@
         {
           "name": "published_at",
           "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "coin_price",
+          "type": "number",
           "required": false,
           "system": false
         }
@@ -723,6 +741,50 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_author_applications_user ON author_applications (user)"]
+    },
+    {
+      "name": "unlocked_chapters",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && user = @request.auth.id",
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "chapter",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "chapters"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_unlocked_chapters_user_chapter ON unlocked_chapters (user, chapter)"
+      ]
     }
   ]
 }

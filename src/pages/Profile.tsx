@@ -33,6 +33,8 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { topUpCoins } from '@/services/api'
+import { Coins } from 'lucide-react'
 import { AuthModal } from '@/components/AuthModal'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
@@ -256,6 +258,22 @@ export default function Profile() {
           </div>
           {isOwnProfile && (
             <div className="flex gap-3 shrink-0 flex-wrap justify-center md:justify-end">
+              {isOwnProfile && (
+                <Button
+                  onClick={async () => {
+                    try {
+                      await topUpCoins(user.id, 500)
+                      toast.success('Adicionado 500 Moedas!')
+                    } catch (e) {
+                      toast.error('Erro ao adicionar moedas.')
+                    }
+                  }}
+                  variant="outline"
+                  className="rounded-xl border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                >
+                  <Coins className="w-4 h-4 mr-2" /> Top Up (+500)
+                </Button>
+              )}
               {!profileUser.is_author &&
                 (authorApplication ? (
                   <Badge

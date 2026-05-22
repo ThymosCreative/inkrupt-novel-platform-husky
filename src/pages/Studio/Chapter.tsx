@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { ArrowLeft, Save, ExternalLink, Type, Hash } from 'lucide-react'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
+import { Coins } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
@@ -25,6 +26,8 @@ export default function StudioChapter() {
     content: '',
     chapter_number: 1,
     status: 'draft',
+    is_premium: false,
+    coin_price: 0,
   })
 
   useEffect(() => {
@@ -38,6 +41,8 @@ export default function StudioChapter() {
           content: record.content || '',
           chapter_number: record.chapter_number || 1,
           status: record.status || 'draft',
+          is_premium: !!record.is_premium,
+          coin_price: record.coin_price || 0,
         })
       })
       .catch((err) => {
@@ -96,6 +101,32 @@ export default function StudioChapter() {
             className="text-xl font-bold border-none bg-transparent shadow-none focus-visible:ring-0 px-0 h-auto py-0"
             placeholder="Título do Capítulo"
           />
+        </div>
+
+        <div className="flex items-center gap-3 bg-amber-500/5 px-4 py-2 rounded-xl border border-amber-500/20 shrink-0">
+          <Label
+            htmlFor="premium-mode"
+            className="text-sm font-medium text-amber-500 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Coins className="w-4 h-4" /> Premium
+          </Label>
+          <Switch
+            id="premium-mode"
+            checked={formData.is_premium}
+            onCheckedChange={(c) => setFormData({ ...formData, is_premium: c })}
+          />
+          {formData.is_premium && (
+            <Input
+              type="number"
+              value={formData.coin_price}
+              onChange={(e) =>
+                setFormData({ ...formData, coin_price: parseInt(e.target.value) || 0 })
+              }
+              className="w-20 h-7 text-xs bg-background"
+              placeholder="Coins"
+              min="0"
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-xl border shrink-0">

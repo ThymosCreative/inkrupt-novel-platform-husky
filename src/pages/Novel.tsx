@@ -51,6 +51,7 @@ import {
   CheckCircle,
   BookOpen,
   ListPlus,
+  Coins,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { AddToListDialog } from '@/components/AddToListDialog'
@@ -625,7 +626,7 @@ export default function Novel() {
                       <div className="flex items-center gap-3 text-zinc-500 text-sm">
                         {chap.is_premium ? (
                           <div className="flex items-center gap-1.5 bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded text-xs font-semibold">
-                            <Lock className="w-3 h-3" /> PREMIUM
+                            <Lock className="w-3 h-3" /> {chap.coin_price || 0}
                           </div>
                         ) : (
                           <div className="w-4" />

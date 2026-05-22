@@ -31,6 +31,7 @@ import { searchNovels, getCoverUrl } from '@/services/api'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useTheme } from '@/components/ThemeProvider'
+import { Coins } from 'lucide-react'
 
 function timeAgo(dateString: string) {
   const date = new Date(dateString)
@@ -95,6 +96,16 @@ export function Header() {
   useEffect(() => {
     loadNotifications()
   }, [user])
+
+  useRealtime(
+    'users',
+    (e) => {
+      if (user && e.record.id === user.id) {
+        pb.collection('users').authRefresh().catch(console.error)
+      }
+    },
+    !!user,
+  )
 
   useRealtime(
     'notifications',
@@ -419,6 +430,10 @@ export function Header() {
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2 sm:gap-4">
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 text-amber-500 rounded-full font-bold text-sm border border-amber-500/20">
+                  <Coins className="w-4 h-4" />
+                  {user?.coins || 0}
+                </div>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -532,6 +547,10 @@ export function Header() {
                         </p>
                         <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                       </div>
+                    </div>
+                    <div className="px-3 py-2 sm:hidden flex items-center gap-2 text-amber-500 font-bold text-sm">
+                      <Coins className="w-4 h-4" />
+                      {user?.coins || 0} moedas
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

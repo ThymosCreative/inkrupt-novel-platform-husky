@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   Edit,
+  Coins,
 } from 'lucide-react'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
 import { useToast } from '@/hooks/use-toast'
@@ -338,6 +339,11 @@ export default function StudioNovel() {
                         <CheckCircle2 className="w-3 h-3" />
                         {chap.status === 'published' ? 'Publicado' : 'Rascunho'}
                       </span>
+                      {chap.is_premium && (
+                        <span className="text-amber-500 font-medium flex items-center gap-1">
+                          • <Coins className="w-3 h-3" /> Premium
+                        </span>
+                      )}
                       {chap.published_at && (
                         <span className="text-muted-foreground">
                           • {new Date(chap.published_at).toLocaleDateString('pt-BR')}

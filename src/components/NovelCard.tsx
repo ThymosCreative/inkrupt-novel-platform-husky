@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Eye, Star, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, getCoverUrl } from '@/services/api'
+import { Coins } from 'lucide-react'
 
 interface NovelCardProps {
   novel: any
@@ -45,6 +46,11 @@ export function NovelCard({ novel, layout = 'vertical', className }: NovelCardPr
             <span className="flex items-center gap-1 text-[10px] text-zinc-500">
               <BookOpen className="w-3 h-3" /> {novel.chapter_count || 0}
             </span>
+            {novel.has_premium && (
+              <span className="flex items-center gap-0.5 text-[10px] text-amber-500">
+                <Coins className="w-3 h-3" />
+              </span>
+            )}
           </div>
         </div>
       </Link>
@@ -66,9 +72,14 @@ export function NovelCard({ novel, layout = 'vertical', className }: NovelCardPr
             alt={novel.title}
             className="w-24 h-36 object-cover rounded-lg shadow-lg"
           />
-          {novel.is_hot && (
+          {novel.is_hot && !novel.has_premium && (
             <Badge className="absolute -top-2 -left-2 bg-lime-400 text-black border-none">
               HOT
+            </Badge>
+          )}
+          {novel.has_premium && (
+            <Badge className="absolute -top-2 -left-2 bg-amber-500 text-black border-none flex items-center gap-1">
+              <Coins className="w-3 h-3" /> Premium
             </Badge>
           )}
         </div>
@@ -121,7 +132,12 @@ export function NovelCard({ novel, layout = 'vertical', className }: NovelCardPr
           alt={novel.title}
           className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
         />
-        {isOriginal && (
+        {novel.has_premium && (
+          <Badge className="absolute top-2 right-2 bg-amber-500 text-black border-none text-[10px] px-1.5 flex items-center gap-1">
+            <Coins className="w-3 h-3" />
+          </Badge>
+        )}
+        {isOriginal && !novel.has_premium && (
           <Badge className="absolute top-2 right-2 bg-white text-black border-none text-[10px] px-1.5">
             ORIGINAL
           </Badge>

@@ -179,6 +179,19 @@ export const unfollowAuthor = async (id: string) => {
   return pb.collection('author_follows').delete(id)
 }
 
+export const topUpCoins = async (userId: string, amount: number) => {
+  const user = await pb.collection('users').getOne(userId)
+  const currentCoins = user.coins || 0
+  return pb.collection('users').update(userId, { coins: currentCoins + amount })
+}
+
+export const unlockChapter = async (chapterId: string) => {
+  return pb.send('/backend/v1/unlock-chapter', {
+    method: 'POST',
+    body: JSON.stringify({ chapter_id: chapterId }),
+  })
+}
+
 export const getAuthorApplication = async (userId: string) => {
   try {
     return await pb.collection('author_applications').getFirstListItem(`user="${userId}"`)
