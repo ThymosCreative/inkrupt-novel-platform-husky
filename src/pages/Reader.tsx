@@ -206,10 +206,14 @@ export default function Reader() {
 
   const sidebarBtnClass = (isActive: boolean) =>
     cn(
-      'w-12 h-12 rounded-full border flex items-center justify-center backdrop-blur-sm transition-all shadow-xl',
-      isActive
-        ? 'bg-zinc-700 border-zinc-600 text-white'
-        : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-500',
+      'w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200',
+      settings.theme === 'light' || settings.theme === 'sepia'
+        ? isActive
+          ? 'bg-[#D4C4A8] text-[#3D2B1F]'
+          : 'text-[#8B7355] hover:bg-[#D4C4A8] hover:text-[#3D2B1F]'
+        : isActive
+          ? 'bg-zinc-800 text-white'
+          : 'text-zinc-500 hover:bg-zinc-800 hover:text-white',
     )
 
   if (loading) {
@@ -238,13 +242,13 @@ export default function Reader() {
 
   const themeClasses = {
     dark: 'bg-black text-slate-300',
-    sepia: 'bg-[#F5E6C8] text-[#5C4A1E]',
+    sepia: 'bg-[#F2E8D9] text-[#3D2B1F]',
     light: 'bg-white text-black',
   }
 
   const headerThemeClasses = {
     dark: 'bg-black/90 border-slate-900',
-    sepia: 'bg-[#F5E6C8]/90 border-[#E6D6B3]',
+    sepia: 'bg-[#EBE0CE]/90 border-[#D4C4A8]',
     light: 'bg-white/90 border-zinc-200',
   }
 
@@ -275,7 +279,7 @@ export default function Reader() {
             : 'opacity-0 pointer-events-none',
         )}
       >
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-4xl">
+        <div className="container mx-auto pl-4 pr-[64px] md:pr-[64px] h-16 flex items-center justify-between max-w-4xl">
           <Link
             to={`/novel/${novel.id}`}
             className="flex items-center gap-3 text-sm font-medium hover:opacity-70 transition-opacity"
@@ -307,16 +311,55 @@ export default function Reader() {
         </div>
       </header>
 
+      {/* Fixed Right Sidebar */}
+      <div
+        className={cn(
+          'fixed top-0 right-0 h-full w-[48px] z-50 flex flex-col items-center py-6 gap-6 transition-colors duration-300',
+          settings.theme === 'light' || settings.theme === 'sepia'
+            ? 'bg-[#E8DDD0] border-l border-[#C8B89A]'
+            : 'bg-zinc-950 border-l border-zinc-800',
+        )}
+      >
+        <button
+          onClick={() => toggleDrawer('settings')}
+          className={sidebarBtnClass(activeDrawer === 'settings')}
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => toggleDrawer('list')}
+          className={sidebarBtnClass(activeDrawer === 'list')}
+        >
+          <List className="w-5 h-5" />
+        </button>
+        <button onClick={handleBookmark} className={sidebarBtnClass(isBookmarked)}>
+          {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+        </button>
+        <button
+          onClick={() => toggleDrawer('comments')}
+          className={sidebarBtnClass(activeDrawer === 'comments')}
+        >
+          <MessageCircle className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Drawers Container */}
       <div
         className={cn(
-          'fixed top-0 right-0 h-full z-50 transition-transform duration-300 transform flex',
+          'fixed top-0 right-[48px] h-full z-40 transition-transform duration-300 transform flex',
           activeDrawer ? 'translate-x-0 shadow-2xl' : 'translate-x-full',
         )}
       >
         {/* Settings Drawer */}
         {activeDrawer === 'settings' && (
-          <div className="w-[280px] bg-zinc-900 border-l border-zinc-800 p-6 flex flex-col gap-8 h-full overflow-y-auto">
+          <div
+            className={cn(
+              'w-[280px] border-l p-6 flex flex-col gap-8 h-full overflow-y-auto',
+              settings.theme === 'sepia'
+                ? 'bg-[#2C2420] border-[#4A3B32]'
+                : 'bg-zinc-900 border-zinc-800',
+            )}
+          >
             <h3 className="font-bold text-white mb-2">Configurações</h3>
 
             <div>
@@ -325,24 +368,22 @@ export default function Reader() {
                 <button
                   onClick={() => updateSetting('theme', 'dark')}
                   className={cn(
-                    'w-10 h-10 rounded-full bg-black border-2',
-                    settings.theme === 'dark' ? 'border-white' : 'border-zinc-600',
+                    'w-10 h-10 rounded-full bg-black border-2 border-zinc-600 outline-none transition-all',
+                    settings.theme === 'dark' ? 'ring-2 ring-white' : '',
                   )}
                 />
                 <button
                   onClick={() => updateSetting('theme', 'sepia')}
                   className={cn(
-                    'w-10 h-10 rounded-full bg-[#F5E6C8] border-2',
-                    settings.theme === 'sepia' ? 'border-white' : 'border-transparent',
+                    'w-10 h-10 rounded-full bg-[#F2E8D9] border-2 border-[#C8B89A] outline-none transition-all',
+                    settings.theme === 'sepia' ? 'ring-2 ring-[#3D2B1F]' : '',
                   )}
                 />
                 <button
                   onClick={() => updateSetting('theme', 'light')}
                   className={cn(
-                    'w-10 h-10 rounded-full bg-white border-2',
-                    settings.theme === 'light'
-                      ? 'border-zinc-900 ring-2 ring-white'
-                      : 'border-zinc-300',
+                    'w-10 h-10 rounded-full bg-white border-2 border-zinc-300 outline-none transition-all',
+                    settings.theme === 'light' ? 'ring-2 ring-zinc-900' : '',
                   )}
                 />
               </div>
@@ -423,12 +464,17 @@ export default function Reader() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-auto pt-4 border-t border-zinc-800">
+            <div
+              className={cn(
+                'flex items-center justify-between mt-auto pt-4 border-t',
+                settings.theme === 'sepia' ? 'border-[#4A3B32]' : 'border-zinc-800',
+              )}
+            >
               <span className="text-sm text-zinc-300">Comentários de Parágrafo</span>
               <Switch
                 checked={settings.paragraphComments}
                 onCheckedChange={(c) => updateSetting('paragraphComments', c)}
-                className="data-[state=checked]:bg-zinc-600 data-[state=unchecked]:bg-zinc-700"
+                className="data-[state=checked]:bg-zinc-500 data-[state=unchecked]:bg-zinc-700"
               />
             </div>
           </div>
@@ -436,8 +482,20 @@ export default function Reader() {
 
         {/* List Drawer */}
         {activeDrawer === 'list' && (
-          <div className="w-[320px] flex flex-col h-full bg-zinc-900 border-l border-zinc-800 shadow-2xl">
-            <div className="p-4 flex items-center justify-between border-b border-zinc-800">
+          <div
+            className={cn(
+              'w-[320px] flex flex-col h-full border-l shadow-2xl',
+              settings.theme === 'sepia'
+                ? 'bg-[#2C2420] border-[#4A3B32]'
+                : 'bg-zinc-900 border-zinc-800',
+            )}
+          >
+            <div
+              className={cn(
+                'p-4 flex items-center justify-between border-b',
+                settings.theme === 'sepia' ? 'border-[#4A3B32]' : 'border-zinc-800',
+              )}
+            >
               <h3 className="font-bold text-white truncate pr-4">{novel?.title}</h3>
               <button
                 onClick={() => setActiveDrawer(null)}
@@ -446,7 +504,14 @@ export default function Reader() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 border-b border-zinc-800 bg-zinc-900/50">
+            <div
+              className={cn(
+                'p-4 border-b',
+                settings.theme === 'sepia'
+                  ? 'border-[#4A3B32] bg-black/10'
+                  : 'border-zinc-800 bg-zinc-900/50',
+              )}
+            >
               <div className="flex justify-between text-sm mb-2 text-zinc-400">
                 <span>Progresso</span>
                 <span>
@@ -467,9 +532,14 @@ export default function Reader() {
                     setActiveDrawer(null)
                   }}
                   className={cn(
-                    'w-full text-left p-4 border-b border-zinc-800/50 hover:bg-zinc-800/80 flex items-center justify-between transition-colors',
+                    'w-full text-left p-4 border-b flex items-center justify-between transition-colors',
+                    settings.theme === 'sepia'
+                      ? 'border-[#4A3B32]/50 hover:bg-black/20'
+                      : 'border-zinc-800/50 hover:bg-zinc-800/80',
                     ch.chapter_number === chapterNum
-                      ? 'bg-zinc-800 border-l-2 border-l-white text-white'
+                      ? settings.theme === 'sepia'
+                        ? 'bg-black/20 border-l-2 border-l-white text-white'
+                        : 'bg-zinc-800 border-l-2 border-l-white text-white'
                       : ch.chapter_number < chapterNum
                         ? 'text-zinc-500'
                         : 'text-zinc-300',
@@ -495,51 +565,13 @@ export default function Reader() {
           <ChapterComments
             chapterId={chapter.id}
             novelAuthorId={novel.author}
+            theme={settings.theme}
             onClose={() => setActiveDrawer(null)}
           />
         )}
       </div>
 
-      {/* Sidebar Controls */}
-      <div
-        className={cn(
-          'fixed top-1/2 -translate-y-1/2 flex flex-col gap-4 z-40 transition-all duration-300',
-          activeDrawer === 'settings'
-            ? 'right-[296px]'
-            : activeDrawer === 'list'
-              ? 'right-[336px]'
-              : activeDrawer === 'comments'
-                ? 'right-[396px]'
-                : 'right-6',
-          showUI || activeDrawer
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none',
-        )}
-      >
-        <button
-          onClick={() => toggleDrawer('settings')}
-          className={sidebarBtnClass(activeDrawer === 'settings')}
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => toggleDrawer('list')}
-          className={sidebarBtnClass(activeDrawer === 'list')}
-        >
-          <List className="w-5 h-5" />
-        </button>
-        <button onClick={handleBookmark} className={sidebarBtnClass(isBookmarked)}>
-          {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
-        </button>
-        <button
-          onClick={() => toggleDrawer('comments')}
-          className={sidebarBtnClass(activeDrawer === 'comments')}
-        >
-          <MessageCircle className="w-5 h-5" />
-        </button>
-      </div>
-
-      <main className="container mx-auto px-4 md:px-8 mt-24 mb-20 transition-all duration-300 max-w-3xl">
+      <main className="container mx-auto pl-4 pr-[64px] md:pl-8 md:pr-[64px] mt-24 mb-20 transition-all duration-300 max-w-3xl">
         <h1 className="text-2xl font-semibold mb-12 text-center font-sans tracking-tight">
           {chapter.title}
         </h1>
@@ -690,7 +722,7 @@ export default function Reader() {
         </div>
       </main>
 
-      <div className="container mx-auto px-4 flex flex-col gap-6 max-w-3xl">
+      <div className="container mx-auto pl-4 pr-[64px] flex flex-col gap-6 max-w-3xl">
         <div className="flex justify-between gap-4 mt-2 mb-8">
           <button
             onClick={() => navigate(`/novel/${novel.id}/chapter/${chapterNum - 1}`)}

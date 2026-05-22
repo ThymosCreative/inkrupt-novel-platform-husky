@@ -24,10 +24,16 @@ function timeAgo(dateString: string) {
 interface ChapterCommentsProps {
   chapterId: string
   novelAuthorId?: string
+  theme?: string
   onClose: () => void
 }
 
-export function ChapterComments({ chapterId, novelAuthorId, onClose }: ChapterCommentsProps) {
+export function ChapterComments({
+  chapterId,
+  novelAuthorId,
+  theme,
+  onClose,
+}: ChapterCommentsProps) {
   const { user } = useAuth()
   const { toast } = useToast()
   const { addExp } = useWallet()
@@ -99,11 +105,26 @@ export function ChapterComments({ chapterId, novelAuthorId, onClose }: ChapterCo
   }
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 w-[380px] border-l border-zinc-800 shadow-2xl">
-      <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+    <div
+      className={cn(
+        'flex flex-col h-full w-[380px] border-l shadow-2xl',
+        theme === 'sepia' ? 'bg-[#2C2420] border-[#4A3B32]' : 'bg-zinc-900 border-zinc-800',
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center justify-between p-4 border-b',
+          theme === 'sepia' ? 'border-[#4A3B32]' : 'border-zinc-800',
+        )}
+      >
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-white text-lg">Comentários do Capítulo</h3>
-          <span className="bg-zinc-800 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          <span
+            className={cn(
+              'text-white text-xs font-bold px-2 py-0.5 rounded-full',
+              theme === 'sepia' ? 'bg-black/30' : 'bg-zinc-800',
+            )}
+          >
             {comments.length}
           </span>
         </div>
@@ -119,7 +140,12 @@ export function ChapterComments({ chapterId, novelAuthorId, onClose }: ChapterCo
               placeholder="O que achou deste capítulo?"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 focus:border-zinc-500 text-white mb-3 min-h-[80px] resize-none"
+              className={cn(
+                'text-white mb-3 min-h-[80px] resize-none',
+                theme === 'sepia'
+                  ? 'bg-black/20 border-[#4A3B32] focus:border-zinc-500'
+                  : 'bg-zinc-800 border-zinc-700 focus:border-zinc-500',
+              )}
             />
             <div className="flex justify-end">
               <Button
@@ -138,7 +164,12 @@ export function ChapterComments({ chapterId, novelAuthorId, onClose }: ChapterCo
           </div>
         )}
 
-        <div className="flex border-b border-zinc-800 mb-6">
+        <div
+          className={cn(
+            'flex border-b mb-6',
+            theme === 'sepia' ? 'border-[#4A3B32]' : 'border-zinc-800',
+          )}
+        >
           <button
             onClick={() => setActiveTab('liked')}
             className={cn(
