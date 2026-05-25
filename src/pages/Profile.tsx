@@ -39,6 +39,7 @@ import { Progress } from '@/components/ui/progress'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
+import { getAuthorApplication, createAuthorApplication } from '@/services/api'
 
 export default function Profile() {
   const { id } = useParams()
@@ -576,3 +577,4 @@ export default function Profile() {
     </div>
   )
 }
+

@@ -559,18 +559,13 @@ export function Header() {
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem
-                        onClick={async () => {
-                          try {
-                            await pb.collection('users').update(user.id, { is_author: true })
-                            await pb.collection('users').authRefresh()
-                          } catch (err) {
-                            console.error(err)
-                          }
-                        }}
+                        asChild
                         className="cursor-pointer hover:bg-zinc-900 focus:bg-zinc-900 rounded-md m-1 text-zinc-200"
                       >
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Tornar-se Autor</span>
+                        <Link to="/profile" className="flex items-center w-full">
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          <span>Tornar-se Autor</span>
+                        </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
@@ -746,3 +741,4 @@ export function Header() {
     </>
   )
 }
+

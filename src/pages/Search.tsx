@@ -55,7 +55,7 @@ export default function Search() {
       )
     }, 500)
     return () => clearTimeout(timer)
-  }, [query, status, type, genres, sort])
+  }, [query, status, type, genres, sort, minRating, chapterRange])
 
   const toggleGenre = (g: string) => {
     setGenres((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]))
@@ -292,3 +292,4 @@ export default function Search() {
     </div>
   )
 }
+

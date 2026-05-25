@@ -1038,12 +1038,14 @@ export default function Novel() {
               const canUseCoin = (wallet?.coins || 0) >= cost
               const canUseFp = type === 'premium' && activeFps >= 1
 
-              const handleUnlock = (method: 'coin' | 'fast_pass') => {
-                const success = unlockChapter(selectedChapter.id, method, cost)
+              const handleUnlock = async (method: 'coin' | 'fast_pass') => {
+                const success = await unlockChapter(selectedChapter.id, method, cost)
                 if (success) {
                   toast.success('Capítulo desbloqueado!')
                   setSelectedChapter(null)
                   navigate(`/novel/${novel.id}/chapter/${selectedChapter.chapter_number}`)
+                } else {
+                  toast.error('Erro ao desbloquear capítulo. Verifique seu saldo.')
                 }
               }
 
@@ -1111,3 +1113,4 @@ export default function Novel() {
     </div>
   )
 }
+
