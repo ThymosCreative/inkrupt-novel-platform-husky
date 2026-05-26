@@ -42,6 +42,74 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
     }
   }, [onChange])
 
+  // Strip all external formatting on paste — keep only plain text structure.
+  // This prevents Google Docs / Word fonts, colors and backgrounds from leaking in.
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      e.preventDefault()
+
+      // Prefer plain text; fall back to stripping HTML if only HTML is available
+      let text = e.clipboardData.getData('text/plain')
+
+      if (!text) {
+        const html = e.clipboardData.getData('text/html')
+        // Strip all tags, decode basic HTML entities
+        text = html
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<[^>]+>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+      }
+
+      // Trim excessive blank lines (3+ consecutive → 2)
+      text = text.replace(/\n{3,}/g, '\n\n').trim()
+
+      // Insert as plain text at the current cursor position
+      const selection = window.getSelection()
+      if (!selection || !selection.rangeCount) return
+
+      selection.deleteFromDocument()
+      const range = selection.getRangeAt(0)
+
+      // Split by double newlines (paragraphs) and insert <p> nodes
+      const paragraphs = text.split(/\n\n+/)
+      const fragment = document.createDocumentFragment()
+
+      paragraphs.forEach((para, i) => {
+        const p = document.createElement('p')
+        // Handle single line breaks within a paragraph
+        const lines = para.split('\n')
+        lines.forEach((line, j) => {
+          p.appendChild(document.createTextNode(line))
+          if (j < lines.length - 1) p.appendChild(document.createElement('br'))
+        })
+        fragment.appendChild(p)
+        // Add blank paragraph between paragraphs (keeps double-enter spacing)
+        if (i < paragraphs.length - 1) {
+          const spacer = document.createElement('p')
+          spacer.appendChild(document.createElement('br'))
+          fragment.appendChild(spacer)
+        }
+      })
+
+      range.insertNode(fragment)
+
+      // Move cursor to end of inserted content
+      range.collapse(false)
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      if (editorRef.current) {
+        onChange(editorRef.current.innerHTML)
+      }
+    },
+    [onChange],
+  )
+
   const execCommand = (command: string, arg?: string) => {
     document.execCommand(command, false, arg)
     if (editorRef.current) {
@@ -210,6 +278,7 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
           className="h-full p-6 md:p-8 outline-none overflow-y-auto prose dark:prose-invert max-w-none focus:outline-none text-base md:text-lg leading-relaxed font-serif"
           contentEditable
           onInput={handleInput}
+          onPaste={handlePaste}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
@@ -217,3 +286,4 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
     </div>
   )
 }
+
