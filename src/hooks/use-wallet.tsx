@@ -243,8 +243,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         level: newLevel,
       })
       .then(() => {
-        addTransaction(1, 'fast_pass', 'Daily Check-in')
-        addTransaction(10, 'exp', 'Daily Check-in')
+        addTransaction(1, 'fast_pass', 'Check-in Diário')
+        addTransaction(10, 'exp', 'Check-in Diário')
         toast.success('Check-in Diário! +1 Fast Pass, +10 EXP')
         // Force-sync user state after check-in so wallet reflects new fast_passes
         pb.collection('users').authRefresh().catch(console.error)
@@ -463,3 +463,4 @@ export const useWallet = () => {
   if (!context) throw new Error('useWallet must be used within a WalletProvider')
   return context
 }
+
