@@ -688,9 +688,18 @@ export default function Reader() {
           // Handle both HTML (RichTextEditor) and plain text (seed data / legacy)
           const rawContent = chapter.content || ''
           const hasHtmlTags = /<[a-z][\s\S]*>/i.test(rawContent)
+          // Strip inline styles injected by external editors (Google Docs, Word, etc.)
+          // before rendering so they don't bleed through as white boxes on dark themes.
+          const sanitize = (h: string) =>
+            h
+              .replace(/\s+style="[^"]*"/gi, '')
+              .replace(/\s+bgcolor="[^"]*"/gi, '')
+              .replace(/\s+color="[^"]*"/gi, '')
+              .replace(/<font[^>]*>/gi, '')
+              .replace(/<\/font>/gi, '')
           const contentText = rawContent
             ? hasHtmlTags
-              ? rawContent
+              ? sanitize(rawContent)
               : rawContent
                   .split(/\n\n+/)
                   .map((p: string) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
@@ -701,6 +710,10 @@ export default function Reader() {
             <div
               className={cn(
                 'transition-all duration-300 [&>p]:mb-6 [&>div]:mb-6',
+                // Force all descendant elements to inherit colors & transparent backgrounds.
+                // This overrides inline styles that external editors (Google Docs, Word)
+                // embed in pasted HTML (e.g. style="background:white;color:black").
+                '[&_*]:!bg-transparent [&_*]:!text-inherit [&_*]:!shadow-none',
                 settings.fontFamily === 'serif' ? 'font-serif' : 'font-sans',
               )}
               style={{
