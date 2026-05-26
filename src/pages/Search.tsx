@@ -96,11 +96,11 @@ export default function Search() {
             <SelectItem value="all" className="focus:bg-zinc-800">
               Qualquer
             </SelectItem>
-            <SelectItem value="Original" className="focus:bg-zinc-800">
-              Original
+            <SelectItem value="Inkrupt Original" className="focus:bg-zinc-800">
+              Inkrupt Original
             </SelectItem>
-            <SelectItem value="Tradução" className="focus:bg-zinc-800">
-              Tradução
+            <SelectItem value="Independente" className="focus:bg-zinc-800">
+              Independente
             </SelectItem>
           </SelectContent>
         </Select>
@@ -292,4 +292,5 @@ export default function Search() {
     </div>
   )
 }
+
 
