@@ -12,20 +12,44 @@ import { useToast } from '@/hooks/use-toast'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
 /**
- * Strip inline styles/attributes injected by external editors (Google Docs, Word, etc.)
- * that cause visual artefacts like white paragraph backgrounds on dark themes.
- * Bold/italic/underline are carried by HTML tags, not inline styles, so they survive.
+ * Aggressive HTML sanitiser. Parses the HTML and removes EVERY attribute from
+ * EVERY element (style, class, id, dir, lang, bgcolor, etc.), unwraps unknown
+ * tags, and strips <font>/<style>/<meta>/<script>/<link>. This guarantees that
+ * pasted Google Docs / Word content never carries through visual formatting
+ * (white paragraph backgrounds, custom fonts, hard-coded colors).
+ * Bold/italic/underline/headings/lists survive because they're carried by
+ * tag names, not attributes.
  */
+const ALLOWED_TAGS = new Set([
+  'p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote',
+  'span', 'div', 'a',
+])
+
 function sanitizeHtml(html: string): string {
   if (!html) return ''
-  return html
-    .replace(/\s+style="[^"]*"/gi, '')
-    .replace(/\s+bgcolor="[^"]*"/gi, '')
-    .replace(/\s+color="[^"]*"/gi, '')
-    .replace(/\s+face="[^"]*"/gi, '')
-    .replace(/\s+size="[^"]*"/gi, '')
-    .replace(/<font[^>]*>/gi, '')
-    .replace(/<\/font>/gi, '')
+  if (typeof window === 'undefined' || !window.DOMParser) return html
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const walk = (node: Element) => {
+    Array.from(node.children).forEach((child) => {
+      Array.from(child.attributes).forEach((a) => child.removeAttribute(a.name))
+      const tag = child.tagName.toLowerCase()
+      if (tag === 'style' || tag === 'meta' || tag === 'script' || tag === 'link') {
+        child.remove()
+        return
+      }
+      if (tag === 'font' || !ALLOWED_TAGS.has(tag)) {
+        const span = doc.createElement('span')
+        span.innerHTML = child.innerHTML
+        child.replaceWith(span)
+        walk(span)
+        return
+      }
+      walk(child)
+    })
+  }
+  walk(doc.body)
+  return doc.body.innerHTML
 }
 
 export default function StudioChapter() {
