@@ -19,6 +19,7 @@ export interface Wallet {
 }
 
 export interface Transaction {
+  id?: string
   amount: number
   type: 'coin' | 'fast_pass' | 'exp'
   description: string
@@ -65,11 +66,6 @@ const getDailyStones = (level: number) => {
   return 1
 }
 
-/**
- * Safely normalise the fast_passes value coming from PocketBase.
- * A brand-new user record may have null / undefined / non-array for this
- * JSON field. Always coerce to a valid FastPass[] before iterating.
- */
 const normaliseFastPasses = (raw: unknown): FastPass[] => {
   if (!Array.isArray(raw)) return []
   return raw.filter(
@@ -135,33 +131,58 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
     : defaultWallet
 
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const saved = localStorage.getItem('inkrupt_transactions')
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
-  })
+  // ── Transactions — backed by PocketBase, no more localStorage ─────────────
+  const [transactions, setTransactions] = useState<Transaction[]>([])
 
+  useEffect(() => {
+    if (!user?.id) {
+      setTransactions([])
+      return
+    }
+    pb.collection('transactions')
+      .getFullList({
+        filter: `user = "${user.id}"`,
+        sort: '-created',
+        perPage: 100,
+      })
+      .then((records) => {
+        setTransactions(
+          records.map((r) => ({
+            id: r.id,
+            amount: r.amount,
+            type: r.type as Transaction['type'],
+            description: r.description,
+            created_at: new Date(r.created).getTime(),
+          })),
+        )
+      })
+      .catch(console.error)
+  }, [user?.id])
+
+  const addTransaction = async (amount: number, type: Transaction['type'], description: string) => {
+    if (!user?.id) return
+    const optimistic: Transaction = { amount, type, description, created_at: Date.now() }
+    setTransactions((prev) => [optimistic, ...prev])
+    try {
+      const record = await pb.collection('transactions').create({
+        user: user.id,
+        amount,
+        type,
+        description,
+      })
+      // Replace optimistic entry with real record id
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t === optimistic ? { ...optimistic, id: record.id } : t,
+        ),
+      )
+    } catch (e) {
+      console.error('[addTransaction]', e)
+    }
+  }
+
+  // ── Unlocked chapters — already in PocketBase ──────────────────────────────
   const [unlockedChapters, setUnlockedChapters] = useState<UnlockedChapter[]>([])
-
-  const [votes, setVotes] = useState<Vote[]>(() => {
-    try {
-      const saved = localStorage.getItem('inkrupt_votes')
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem('inkrupt_transactions', JSON.stringify(transactions))
-  }, [transactions])
-
-  useEffect(() => {
-    localStorage.setItem('inkrupt_votes', JSON.stringify(votes))
-  }, [votes])
 
   useEffect(() => {
     if (user) {
@@ -182,9 +203,32 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user?.id])
 
-  const addTransaction = (amount: number, type: Transaction['type'], description: string) => {
-    setTransactions((prev) => [{ amount, type, description, created_at: Date.now() }, ...prev])
-  }
+  // ── Votes — backed by PocketBase novel_votes collection ───────────────────
+  const [votes, setVotes] = useState<Vote[]>([])
+
+  useEffect(() => {
+    if (!user?.id) {
+      setVotes([])
+      return
+    }
+    // Only load votes from today — that's all the frontend needs for the
+    // "already voted today?" check. Keeps the query light.
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    pb.collection('novel_votes')
+      .getFullList({
+        filter: `user = "${user.id}" && voted_at >= ${today.getTime()}`,
+      })
+      .then((records) => {
+        setVotes(
+          records.map((r) => ({
+            novel_id: r.novel,
+            voted_at: r.voted_at,
+          })),
+        )
+      })
+      .catch(console.error)
+  }, [user?.id])
 
   const addExp = async (amount: number, reason: string) => {
     if (!user) return
@@ -202,15 +246,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         fast_passes: newFps,
         power_stones: newStones,
       })
-      addTransaction(amount, 'exp', reason)
+      await addTransaction(amount, 'exp', reason)
     } catch (e) {
       console.error(e)
     }
   }
 
-  // Track which user IDs have had check-in attempted this session so the
-  // check-in does NOT re-fire every time authRefresh replaces the user object
-  // with a fresh reference.
   const checkinDoneRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
@@ -228,7 +269,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       getDailyStones(getLevel(wallet.exp)),
     )
 
-    // Always add 1 new fast pass from the check-in reward
     const checkinFp: FastPass = { amount: 1, expires_at: Date.now() + 7 * 86400000 }
     const finalFps = [...newFps, checkinFp]
 
@@ -242,11 +282,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         exp: newExp,
         level: newLevel,
       })
-      .then(() => {
-        addTransaction(1, 'fast_pass', 'Check-in Diário')
-        addTransaction(10, 'exp', 'Check-in Diário')
+      .then(async () => {
+        await addTransaction(1, 'fast_pass', 'Check-in Diário')
+        await addTransaction(10, 'exp', 'Check-in Diário')
         toast.success('Check-in Diário! +1 Fast Pass, +10 EXP')
-        // Force-sync user state after check-in so wallet reflects new fast_passes
         pb.collection('users').authRefresh().catch(console.error)
       })
       .catch((err) => {
@@ -260,7 +299,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return
     try {
       await pb.collection('users').update(user.id, { coins: wallet.coins + amount })
-      addTransaction(amount, 'coin', `Compra de Pacote (R$ ${price.toFixed(2)})`)
+      await addTransaction(amount, 'coin', `Compra de Pacote (R$ ${price.toFixed(2)})`)
       toast.success(`${amount} Coins comprados com sucesso!`)
     } catch (e) {
       console.error(e)
@@ -310,15 +349,24 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         level: newLevel,
       })
 
+      const nowTs = Date.now()
+
+      // Record the vote in PocketBase (novel_votes collection)
+      await pb.collection('novel_votes').create({
+        user: user.id,
+        novel: novelId,
+        voted_at: nowTs,
+      })
+
       if (grantedFp) {
         setTimeout(() => toast.success('Voto registrado! +1 Fast Pass, +5 EXP'), 100)
-        addTransaction(1, 'fast_pass', 'Recompensa de Voto')
+        await addTransaction(1, 'fast_pass', 'Recompensa de Voto')
       } else {
         setTimeout(() => toast.success('Voto registrado! +5 EXP'), 100)
       }
 
-      setVotes((prev) => [{ novel_id: novelId, voted_at: Date.now() }, ...prev])
-      addTransaction(5, 'exp', 'Voto com Power Stone')
+      setVotes((prev) => [{ novel_id: novelId, voted_at: nowTs }, ...prev])
+      await addTransaction(5, 'exp', 'Voto com Power Stone')
 
       pb.send('/backend/v1/vote', {
         method: 'POST',
@@ -333,34 +381,22 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  /**
-   * Unlock a premium chapter using either Coins or Fast Passes.
-   *
-   * This is handled entirely on the frontend via direct PocketBase SDK calls
-   * (no custom backend hook required). The unlocked_chapters collection has a
-   * UNIQUE index on (user, chapter) so duplicate unlocks are safe.
-   */
   const unlockChapter = async (chapterId: string, method: 'coin' | 'fast_pass', cost: number) => {
     if (!user) return false
 
     try {
-      // ── 1. Check if already unlocked (idempotent) ──────────────────────────
       try {
         await pb
           .collection('unlocked_chapters')
           .getFirstListItem(`user = "${user.id}" && chapter = "${chapterId}"`)
-        // Already unlocked – add to local state if missing and succeed
         setUnlockedChapters((prev) =>
           prev.some((c) => c.chapter_id === chapterId)
             ? prev
             : [...prev, { chapter_id: chapterId, unlocked_at: Date.now(), method }],
         )
         return true
-      } catch (_) {
-        // Not yet unlocked – continue
-      }
+      } catch (_) {}
 
-      // ── 2. Deduct cost from wallet ──────────────────────────────────────────
       if (method === 'fast_pass') {
         const activeFps = normaliseFastPasses(wallet.fast_passes).filter(
           (fp) => fp.expires_at > Date.now(),
@@ -372,16 +408,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           return false
         }
 
-        // Deduct 1 from the earliest-expiring batch
         activeFps.sort((a, b) => a.expires_at - b.expires_at)
-        const updatedFps = activeFps.map((fp, i) =>
-          i === 0 ? { ...fp, amount: fp.amount - 1 } : fp,
-        ).filter((fp) => fp.amount > 0)
+        const updatedFps = activeFps
+          .map((fp, i) => (i === 0 ? { ...fp, amount: fp.amount - 1 } : fp))
+          .filter((fp) => fp.amount > 0)
 
         await pb.collection('users').update(user.id, { fast_passes: updatedFps })
-        addTransaction(-1, 'fast_pass', `Desbloqueio: Cap ${chapterId}`)
+        await addTransaction(-1, 'fast_pass', `Desbloqueio: Cap ${chapterId}`)
       } else {
-        // coin
         if (wallet.coins < cost) {
           toast.error('Coins insuficientes.')
           return false
@@ -406,17 +440,15 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         }
 
         await pb.collection('users').update(user.id, updates)
-        addTransaction(-cost, 'coin', `Desbloqueio: Cap ${chapterId}`)
-        addTransaction(3, 'exp', 'Desbloqueio com Coins')
+        await addTransaction(-cost, 'coin', `Desbloqueio: Cap ${chapterId}`)
+        await addTransaction(3, 'exp', 'Desbloqueio com Coins')
       }
 
-      // ── 3. Register unlock in PocketBase ───────────────────────────────────
       await pb.collection('unlocked_chapters').create({
         user: user.id,
         chapter: chapterId,
       })
 
-      // ── 4. Update local state and sync user ────────────────────────────────
       setUnlockedChapters((prev) => [
         ...prev,
         { chapter_id: chapterId, unlocked_at: Date.now(), method },
@@ -463,4 +495,3 @@ export const useWallet = () => {
   if (!context) throw new Error('useWallet must be used within a WalletProvider')
   return context
 }
-
