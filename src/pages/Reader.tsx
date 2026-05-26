@@ -20,6 +20,8 @@ import {
   X,
   Gift,
   Search,
+  Crown,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChapterComments } from '@/components/ChapterComments'
@@ -577,12 +579,26 @@ export default function Reader() {
                   <span className="truncate pr-4 font-medium">
                     {ch.chapter_number}. {ch.title}
                   </span>
-                  {ch.is_premium && (
-                    <div className="flex items-center gap-1 text-zinc-500 shrink-0">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span className="text-xs">{ch.coin_price || 0}</span>
-                    </div>
-                  )}
+                  {/* Chapter type indicator — different icon per type */}
+                  {(() => {
+                    const chType = ch.type || (ch.is_premium ? 'premium' : 'free')
+                    if (chType === 'privilege') {
+                      return (
+                        <div className="flex items-center gap-1 text-violet-400 shrink-0">
+                          <Crown className="w-3.5 h-3.5" />
+                        </div>
+                      )
+                    }
+                    if (chType === 'premium') {
+                      return (
+                        <div className="flex items-center gap-1 text-amber-500 shrink-0">
+                          <Lock className="w-3.5 h-3.5" />
+                          <span className="text-xs">{ch.coin_price || 0}</span>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
                 </button>
               ))}
             </div>
@@ -631,19 +647,47 @@ export default function Reader() {
               }
             }
 
+            // ── Privilege chapter: only unlockable via Privilege Pass subscription ──
+            // The subscription system is being built in Phase 2.3 — for now we show
+            // a "Em breve" CTA so the UI is correct but readers can't yet subscribe.
+            if (type === 'privilege') {
+              return (
+                <div className="bg-gradient-to-br from-violet-950/40 via-zinc-900/60 to-zinc-900/50 border border-violet-500/30 rounded-2xl p-8 text-center flex flex-col items-center max-w-lg mx-auto text-white">
+                  <div className="w-16 h-16 bg-violet-500/20 rounded-full flex items-center justify-center mb-4">
+                    <Crown className="w-8 h-8 text-violet-400" />
+                  </div>
+                  <Badge className="bg-violet-500 text-white mb-4 font-black tracking-widest">
+                    PRIVILEGE
+                  </Badge>
+                  <h2 className="text-2xl font-bold mb-2">Capítulo Exclusivo</h2>
+                  <p className="text-zinc-400 mb-6">
+                    Este capítulo faz parte do <strong className="text-violet-300">Privilege Pass</strong>
+                    , o acesso antecipado mensal a capítulos exclusivos de obras Inkrupt Original.
+                  </p>
+
+                  <Button
+                    disabled
+                    className="w-full h-12 bg-violet-500/40 text-white font-bold border-none cursor-not-allowed"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" /> Privilege Pass — em breve
+                  </Button>
+
+                  <p className="mt-4 text-xs text-zinc-500">
+                    Assine para desbloquear todos os capítulos Privilege das suas obras favoritas.
+                  </p>
+                </div>
+              )
+            }
+
+            // ── Premium chapter: unlockable with Coins or Fast Pass ────────────────
             return (
               <div className="bg-zinc-900/50 border border-border rounded-2xl p-8 text-center flex flex-col items-center max-w-lg mx-auto text-white">
-                <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                  <Lock className="w-8 h-8 text-zinc-400" />
+                <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-4">
+                  <Lock className="w-8 h-8 text-amber-500" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Capítulo Bloqueado</h2>
-                {type === 'privilege' && (
-                  <Badge className="bg-white text-black mb-4 font-black">PRIVILEGE</Badge>
-                )}
+                <h2 className="text-2xl font-bold mb-2">Capítulo Premium</h2>
                 <p className="text-zinc-400 mb-6">
-                  {type === 'privilege'
-                    ? 'Este capítulo é Privilege e só pode ser desbloqueado com Coins.'
-                    : 'Desbloqueie este capítulo premium para continuar lendo.'}
+                  Desbloqueie este capítulo para continuar lendo.
                 </p>
 
                 <div className="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-xl font-bold mb-6">
@@ -652,18 +696,16 @@ export default function Reader() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  {type === 'premium' && (
-                    <Button
-                      onClick={() => handleLocalUnlock('fast_pass')}
-                      variant="outline"
-                      className="flex-1 h-12 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold"
-                      disabled={
-                        wallet.fast_passes.reduce((a: number, b: any) => a + b.amount, 0) < 1
-                      }
-                    >
-                      <Zap className="w-4 h-4 mr-2" /> Usar 1 Fast Pass
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => handleLocalUnlock('fast_pass')}
+                    variant="outline"
+                    className="flex-1 h-12 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold"
+                    disabled={
+                      wallet.fast_passes.reduce((a: number, b: any) => a + b.amount, 0) < 1
+                    }
+                  >
+                    <Zap className="w-4 h-4 mr-2" /> Usar 1 Fast Pass
+                  </Button>
                   <Button
                     onClick={() => handleLocalUnlock('coin')}
                     className="flex-1 h-12 bg-amber-500 text-black hover:bg-amber-600 font-bold border-none"
@@ -674,8 +716,7 @@ export default function Reader() {
                 </div>
 
                 {wallet.coins < cost &&
-                  (type === 'privilege' ||
-                    wallet.fast_passes.reduce((a: number, b: any) => a + b.amount, 0) < 1) && (
+                  wallet.fast_passes.reduce((a: number, b: any) => a + b.amount, 0) < 1 && (
                     <Link
                       to="/store"
                       className="mt-6 text-sm text-zinc-300 hover:text-white hover:underline font-medium transition-colors"
