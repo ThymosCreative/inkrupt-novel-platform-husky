@@ -11,6 +11,23 @@ import { Coins } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
+/**
+ * Strip inline styles/attributes injected by external editors (Google Docs, Word, etc.)
+ * that cause visual artefacts like white paragraph backgrounds on dark themes.
+ * Bold/italic/underline are carried by HTML tags, not inline styles, so they survive.
+ */
+function sanitizeHtml(html: string): string {
+  if (!html) return ''
+  return html
+    .replace(/\s+style="[^"]*"/gi, '')
+    .replace(/\s+bgcolor="[^"]*"/gi, '')
+    .replace(/\s+color="[^"]*"/gi, '')
+    .replace(/\s+face="[^"]*"/gi, '')
+    .replace(/\s+size="[^"]*"/gi, '')
+    .replace(/<font[^>]*>/gi, '')
+    .replace(/<\/font>/gi, '')
+}
+
 export default function StudioChapter() {
   const { id, chapterId } = useParams<{ id: string; chapterId: string }>()
   const navigate = useNavigate()
@@ -41,7 +58,7 @@ export default function StudioChapter() {
           // If the API returns empty content but we already have content in the editor
           // (e.g. enrich_chapters hook stripped it for a published premium chapter),
           // keep the existing editor content rather than wiping it.
-          content: record.content || prev.content || '',
+          content: sanitizeHtml(record.content || '') || prev.content || '',
           chapter_number: record.chapter_number || 1,
           status: record.status || 'draft',
           is_premium: !!record.is_premium,
